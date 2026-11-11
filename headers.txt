@@ -1,0 +1,15 @@
+HTTP/1.1 400 Bad Request
+Cache-Control: public, max-age=0, must-revalidate
+Content-Type: application/json
+Date: Tue, 10 Nov 2026 18:34:10 GMT
+Permissions-Policy: camera=(), microphone=(), geolocation=()
+Referrer-Policy: strict-origin-when-cross-origin
+Server: Vercel
+Strict-Transport-Security: max-age=63072000
+X-Content-Type-Options: nosniff
+X-Frame-Options: SAMEORIGIN
+X-Matched-Path: /api/mcp
+X-Vercel-Cache: MISS
+X-Vercel-Id: bom1::iad1::8v7vw-1794335650004-c8c9b21f2a45
+Transfer-Encoding: chunked
+
