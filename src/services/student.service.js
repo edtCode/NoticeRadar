@@ -25,6 +25,8 @@ const PROFILE_COLUMNS = `
     )
 `;
 
+const PROFILE_ROW_COLUMNS = "id, user_id, department_id, branch, semester, cpi, graduation_year, active_backlogs, interests";
+
 const toStudentProfile = (payload) => ({
     branch: payload.branch,
     semester: payload.semester,
@@ -103,18 +105,40 @@ export const createStudentProfile = async (supabase, userId, payload) => {
 
     const departmentId = await resolveDepartmentId(supabase, payload.institutionId, payload.departmentName);
 
-    const { data, error } = await supabase
+    const { data: inserted, error } = await supabase
         .from("student_profiles")
         .insert({
             user_id: userId,
             department_id: departmentId,
             ...toStudentProfile(payload)
         })
-        .select("id, user_id, department_id, branch, semester, cpi, graduation_year, active_backlogs, interests")
+        .select(PROFILE_ROW_COLUMNS)
         .single();
 
+    let data = inserted;
+
     if (error) {
-        throw databaseError(error);
+        // Completing onboarding twice (a retry, or a slow first request that
+        // already saved the profile) must not dead-end the student.
+        if (error.code !== "23505") {
+            throw databaseError(error);
+        }
+
+        const { data: existing, error: existingError } = await supabase
+            .from("student_profiles")
+            .select(PROFILE_ROW_COLUMNS)
+            .eq("user_id", userId)
+            .maybeSingle();
+
+        if (existingError) {
+            throw databaseError(existingError);
+        }
+
+        if (!existing) {
+            throw databaseError(error);
+        }
+
+        data = existing;
     }
 
     await syncProfileInstitution(supabase, userId, payload.institutionId);
@@ -173,7 +197,7 @@ export const updateStudentProfile = async (supabase, userId, payload) => {
         .from("student_profiles")
         .update(fields)
         .eq("user_id", userId)
-        .select("id, user_id, department_id, branch, semester, cpi, graduation_year, active_backlogs, interests")
+        .select(PROFILE_ROW_COLUMNS)
         .single();
 
     if (error) {

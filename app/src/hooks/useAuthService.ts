@@ -54,8 +54,10 @@ export function useCreateStudentProfile() {
 
   return useMutation({
     mutationFn: (payload: StudentProfilePayload) => authService.createStudentProfile(payload),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['students', 'profile'] });
+    // Wait for the refreshed profile before resolving: the student dashboard
+    // guard reads this cache and would bounce a new student back to onboarding.
+    onSuccess: async () => {
+      await queryClient.refetchQueries({ queryKey: ['students', 'profile'] });
       queryClient.invalidateQueries({ queryKey: ['auth', 'me'] });
       queryClient.invalidateQueries({ queryKey: ['notices'] });
       queryClient.invalidateQueries({ queryKey: ['deadlines'] });

@@ -75,6 +75,37 @@ test("creates a valid student profile for the authenticated user", async () => {
     assert.deepEqual(rpcCall.params, { p_institution_id: INSTITUTION_ID, p_name: "Computer Science" });
 });
 
+test("returns the saved profile when onboarding is submitted twice", async () => {
+    const savedProfile = {
+        id: "99999999-9999-4999-8999-999999999999",
+        user_id: STUDENT_ID,
+        department_id: DEPARTMENT_ID
+    };
+
+    const { app } = buildStudentApp({
+        rpc: { find_or_create_department: { data: DEPARTMENT_ID } },
+        tables: {
+            institutions: { select: { data: institutionRow } },
+            student_profiles: {
+                insert: { data: null, error: { code: "23505", message: "duplicate key value" } },
+                select: { data: savedProfile }
+            },
+            profiles: {
+                select: { data: studentProfileRow },
+                update: { data: studentProfileRow }
+            }
+        }
+    });
+
+    const response = await request(app)
+        .post("/api/v1/students/profile")
+        .set("Authorization", "Bearer valid-token")
+        .send(validPayload);
+
+    assert.equal(response.status, 201);
+    assert.equal(response.body.data.id, savedProfile.id);
+});
+
 test("rejects a CPI outside the allowed range", async () => {
     const { app } = buildStudentApp({ tables: {} });
 

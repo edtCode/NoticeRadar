@@ -9,7 +9,7 @@ import { SectionHeader } from '../../components/common/PageHeader';
 import { InstitutionAutocomplete } from '../../components/common/InstitutionAutocomplete';
 import { useStudentProfile, useCreateStudentProfile } from '../../hooks/useAuthService';
 import { INTEREST_OPTIONS, BRANCH_OPTIONS, SEMESTER_OPTIONS } from '../../constants';
-import type { InstitutionSearchResult } from '../../types';
+import type { InstitutionSearchResult, StudentProfileResponse } from '../../types';
 import { cn } from '../../utils/helpers';
 
 const onboardingSchema = z.object({
@@ -25,6 +25,11 @@ const onboardingSchema = z.object({
 
 type OnboardingForm = z.infer<typeof onboardingSchema>;
 
+const firstStudentProfile = (response?: StudentProfileResponse | null) => {
+  const record = response?.student_profiles;
+  return Array.isArray(record) ? (record[0] ?? null) : (record ?? null);
+};
+
 const STEPS = ['Institution', 'Academics', 'Interests', 'Review'] as const;
 
 export function OnboardingPage() {
@@ -33,7 +38,8 @@ export function OnboardingPage() {
   const [interestsValue, setInterestsValue] = useState<string[]>([]);
   const [formError, setFormError] = useState<string | null>(null);
 
-  const { data: profile } = useStudentProfile();
+  const profileQuery = useStudentProfile();
+  const profile = profileQuery.data;
   const [selectedInstitutionId, setSelectedInstitutionId] = useState('');
   const [institutionName, setInstitutionName] = useState('');
 
@@ -54,6 +60,14 @@ export function OnboardingPage() {
   });
 
   const createProfile = useCreateStudentProfile();
+
+  // Returning to this page after the profile was saved should not restart
+  // onboarding — the student already has a dashboard to go to.
+  useEffect(() => {
+    if (firstStudentProfile(profile)) {
+      navigate('/student/dashboard', { replace: true });
+    }
+  }, [profile, navigate]);
 
   // Registration can already carry an institution — prefill it once loaded.
   useEffect(() => {
@@ -122,8 +136,17 @@ export function OnboardingPage() {
         interests: data.interests,
       });
       navigate('/student/dashboard', { replace: true });
-    } catch {
-      setFormError('Could not complete your profile. Please try again.');
+    } catch (error) {
+      // The profile may have been saved by an earlier attempt; the dashboard
+      // guard only needs the profile to exist, so send the student there.
+      const refreshed = await profileQuery.refetch();
+      if (firstStudentProfile(refreshed.data)) {
+        navigate('/student/dashboard', { replace: true });
+        return;
+      }
+
+      const message = error instanceof Error && error.message ? error.message : null;
+      setFormError(message ? `Could not complete your profile: ${message}` : 'Could not complete your profile. Please try again.');
     }
   });
 
