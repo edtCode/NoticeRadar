@@ -101,7 +101,7 @@ export function SavedNoticesPage() {
         <EmptyState
           icon={<Bookmark className="w-12 h-12" />}
           title="You haven't saved any notices yet."
-          description="Bookmark internships, placements and scholarships you care about so they're easy to find later."
+          description="Bookmark institution notices you care about so they're easy to find later. Entries you added yourself are in My Notices, All Notices and on your dashboard."
           action={{ label: 'Explore Notices', onClick: () => (window.location.href = ROUTES.STUDENT_NOTICES) }}
         />
       ) : filtered.length === 0 ? (
@@ -115,7 +115,6 @@ export function SavedNoticesPage() {
               saved
               onUnsave={handleUnsave}
               onSave={() => undefined}
-              showEligibility={false}
             />
           ))}
         </div>

@@ -58,6 +58,37 @@ export function StudentDashboard() {
   const deadlines = deadlinesQuery.data ?? [];
   const savedTotal = savedQuery.data?.pagination?.total;
 
+  // Deadlines the student added themselves belong on the dashboard too.
+  const ownDeadlines: DeadlineRow[] = (personalQuery.data ?? [])
+    .filter((entry) => {
+      if (!entry.deadline) return false;
+      const days = daysUntil(new Date(entry.deadline));
+      return days >= 0 && days <= 30;
+    })
+    .map((entry) => ({
+      id: entry.id,
+      title: entry.title,
+      category: entry.category,
+      deadline: entry.deadline,
+      eligibility: entry.eligibility,
+      href: ROUTES.STUDENT_MY_NOTICES,
+    }));
+
+  const deadlineRows: DeadlineRow[] = [
+    ...deadlines.map((item: UpcomingDeadline) => ({
+      id: item.id,
+      title: item.title,
+      category: item.category,
+      deadline: item.deadline,
+      eligibility: item.eligibility,
+      href: `/student/notices/${item.id}`,
+    })),
+    ...ownDeadlines,
+  ]
+    .sort((a, b) => new Date(a.deadline ?? 0).getTime() - new Date(b.deadline ?? 0).getTime())
+    .slice(0, 5);
+  const deadlineCount = deadlines.length + ownDeadlines.length;
+
   return (
     <div className="space-y-8">
       {/* Welcome header */}
@@ -84,7 +115,7 @@ export function StudentDashboard() {
               <StatCard icon={<FileText className="w-5 h-5" />} label="Notices on your radar" value={feedQuery.data ? feedQuery.data.pagination.total ?? feedNotices.length : null} tone="accent" />
               <StatCard icon={<Target className="w-5 h-5" />} label="Eligible in your feed" value={eligibleCount} tone="success" />
               <StatCard icon={<Bookmark className="w-5 h-5" />} label="Saved notices" value={typeof savedTotal === 'number' ? savedTotal : null} tone="info" />
-              <StatCard icon={<CalendarClock className="w-5 h-5" />} label="Deadlines in 30 days" value={deadlinesQuery.data ? deadlines.length : null} tone="warning" />
+              <StatCard icon={<CalendarClock className="w-5 h-5" />} label="Deadlines in 30 days" value={deadlinesQuery.data && personalQuery.data ? deadlineCount : null} tone="warning" />
             </>
           )}
         </div>
@@ -178,19 +209,19 @@ export function StudentDashboard() {
           />
         ) : deadlinesQuery.isLoading ? (
           <div className="space-y-2">{Array.from({ length: 3 }).map((_, i) => <div key={i} className="h-16 bg-border/40 rounded-md skeleton-shimmer" />)}</div>
-        ) : deadlines.length === 0 ? (
+        ) : deadlineRows.length === 0 ? (
           <div className="flex items-center gap-3 p-4 bg-bg-elevated border border-border rounded-lg text-body-sm text-text-muted">
             <Clock className="w-5 h-5 flex-shrink-0" aria-hidden="true" />
             No deadlines in the next 30 days. Saved opportunities will appear here as their deadlines approach.
           </div>
         ) : (
           <ul className="bg-bg-elevated border border-border rounded-lg divide-y divide-border">
-            {deadlines.map((item: UpcomingDeadline) => {
+            {deadlineRows.map((item) => {
               const d = item.deadline ? daysUntil(new Date(item.deadline)) : null;
               return (
                 <li key={item.id}>
                   <Link
-                    to={`/student/notices/${item.id}`}
+                    to={item.href}
                     className="flex items-center gap-4 px-4 py-3 hover:bg-bg-hover transition-colors group"
                   >
                     <span
@@ -259,6 +290,7 @@ export function StudentDashboard() {
                     <span className="block text-body font-medium text-text truncate">{entry.title}</span>
                     <span className="mt-0.5 flex items-center gap-2">
                       <CategoryBadge category={entry.category} size="sm" dot={false} />
+                      {entry.eligibility && <StatusBadge status={entry.eligibility.status} type="eligibility" size="sm" dot={false} />}
                       <span className="text-caption text-text-muted">{entry.deadline ? formatDate(entry.deadline) : 'No deadline'}</span>
                     </span>
                   </span>
@@ -272,6 +304,15 @@ export function StudentDashboard() {
     </div>
   );
 }
+
+type DeadlineRow = {
+  id: string;
+  title: string;
+  category: string;
+  deadline: string | null;
+  eligibility?: Notice['eligibility'];
+  href: string;
+};
 
 function StatCard({ icon, label, value, tone }: { icon: React.ReactNode; label: string; value: number | null; tone: 'accent' | 'success' | 'warning' | 'info' }) {
   const tones = {

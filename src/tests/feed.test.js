@@ -214,6 +214,7 @@ test("saved notices are returned with their notice details", async () => {
 
     assert.equal(response.status, 200);
     assert.equal(response.body.data[0].notices.title, "Summer Internship");
+    assert.equal(response.body.data[0].notices.eligibility.status, "ELIGIBLE");
 });
 
 test("upcoming deadlines are scoped to the institution and flagged with eligibility", async () => {

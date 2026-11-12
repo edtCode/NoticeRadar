@@ -1,6 +1,6 @@
 import { ApiError, databaseError } from "../utils/errors.js";
 import { buildPagination, getPagination } from "../utils/pagination.js";
-import { getPublishedNotice } from "./notice.service.js";
+import { addEligibility, getPublishedNotice, getStudentMatchingProfile, toEligibilityStudent } from "./notice.service.js";
 
 export const saveNotice = async (supabase, userId, noticeId, institutionId) => {
     const notice = await getPublishedNotice(supabase, noticeId, institutionId);
@@ -61,7 +61,13 @@ export const getSavedNotices = async (supabase, userId, filters) => {
                 deadline,
                 published_at,
                 application_url,
-                file_name
+                file_name,
+                eligible_branches,
+                minimum_cpi,
+                minimum_semester,
+                maximum_semester,
+                eligible_graduation_years,
+                requires_no_backlogs
             )
         `, { count: "exact" })
         .eq("user_id", userId)
@@ -73,8 +79,30 @@ export const getSavedNotices = async (supabase, userId, filters) => {
         throw databaseError(error);
     }
 
+    const rows = data ?? [];
+
+    // Saved notices are shown next to the feed, so they carry the same
+    // eligibility verdict instead of hiding it on the Saved page.
+    if (rows.length === 0) {
+        return {
+            data: rows,
+            pagination: buildPagination(filters.page, filters.limit, count ?? 0)
+        };
+    }
+
+    let student = null;
+
+    try {
+        const profile = await getStudentMatchingProfile(supabase, userId);
+        student = toEligibilityStudent(profile);
+    } catch {
+        student = null;
+    }
+
     return {
-        data: data ?? [],
+        data: rows.map((row) =>
+            row.notices ? { ...row, notices: addEligibility(row.notices, student) } : row
+        ),
         pagination: buildPagination(filters.page, filters.limit, count ?? 0)
     };
 };

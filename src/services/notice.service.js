@@ -386,7 +386,7 @@ export const reviewNotice = async (supabase, noticeId, institutionId, userId, pa
     return data;
 };
 
-const getStudentMatchingProfile = async (supabase, userId) => {
+export const getStudentMatchingProfile = async (supabase, userId) => {
     const { data, error } = await supabase
         .from("profiles")
         .select("id, institution_id, student_profiles ( branch, semester, cpi, graduation_year, active_backlogs )")
@@ -404,7 +404,7 @@ const getStudentMatchingProfile = async (supabase, userId) => {
     return data;
 };
 
-const toEligibilityStudent = (profile) => {
+export const toEligibilityStudent = (profile) => {
     const studentProfile = Array.isArray(profile.student_profiles)
         ? profile.student_profiles[0]
         : profile.student_profiles;
@@ -422,7 +422,7 @@ const toEligibilityStudent = (profile) => {
     };
 };
 
-const addEligibility = (notice, student) => {
+export const addEligibility = (notice, student) => {
     if (!student) {
         return { ...notice, eligibility: { status: "POSSIBLY_ELIGIBLE", reasons: ["Complete your student profile to check eligibility"], missingFields: ["studentProfile"] } };
     }

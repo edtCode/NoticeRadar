@@ -87,21 +87,32 @@ export function AllNoticesPage() {
   // The student's own entries live in My Notices; showing them here too means
   // "All Notices" really is everything they track, eligibility included.
   const ownEntries = ownEntriesQuery.data ?? [];
-  const showOwnEntries = tab === 'all';
+  // Own entries take part in the eligibility tabs too, so "Eligible" is not
+  // empty just because the institution feed is quiet.
+  const showOwnEntries = tab === 'all' || eligibility !== undefined;
   const ownEntriesFiltered = useMemo(() => {
     if (!showOwnEntries) return [];
-    return ownEntries.filter((entry) => {
+    const matches = ownEntries.filter((entry) => {
+      if (eligibility && entry.eligibility?.status !== eligibility) return false;
       if (search && !`${entry.title} ${entry.description ?? ''}`.toLowerCase().includes(search.toLowerCase())) return false;
       if (category && entry.category !== category) return false;
       if (deadlineFrom && (!entry.deadline || entry.deadline.slice(0, 10) < deadlineFrom)) return false;
       return true;
     });
-  }, [showOwnEntries, ownEntries, search, category, deadlineFrom]);
+    if (sort === 'deadline') {
+      matches.sort((a, b) => {
+        if (!a.deadline) return 1;
+        if (!b.deadline) return -1;
+        return a.deadline.localeCompare(b.deadline);
+      });
+    }
+    return matches;
+  }, [showOwnEntries, eligibility, ownEntries, search, category, deadlineFrom, sort]);
 
   const activeFilterCount = [category, publishedFrom, deadlineFrom].filter(Boolean).length;
 
   const notices: Notice[] = isSavedTab
-    ? (savedListQuery.data?.data.flatMap((row) => (row.notices ? [{ ...row.notices, eligibility: undefined }] as unknown as Notice[] : [])) ?? [])
+    ? (savedListQuery.data?.data.flatMap((row) => (row.notices ? [row.notices] as unknown as Notice[] : [])) ?? [])
     : (noticesQuery.data?.data ?? []);
   const isLoading = isSavedTab ? savedListQuery.isLoading : noticesQuery.isLoading;
   const isError = isSavedTab ? savedListQuery.isError : noticesQuery.isError;
@@ -123,7 +134,7 @@ export function AllNoticesPage() {
       <header className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
         <div>
           <h1 className="text-h1 font-semibold text-text">All Notices</h1>
-          <p className="text-body text-text-muted mt-1">Everything published by your institution.</p>
+          <p className="text-body text-text-muted mt-1">Everything published by your institution, plus the notices and events you added yourself.</p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
           <div className="relative flex-1 min-w-[220px]">
@@ -270,7 +281,6 @@ export function AllNoticesPage() {
                     onSave={handleSave}
                     onUnsave={handleSave}
                     savePending={saveMutation.isPending || unsaveMutation.isPending}
-                    showEligibility={!isSavedTab}
                   />
                 ))}
               </div>
@@ -297,7 +307,7 @@ export function AllNoticesPage() {
           ))}
           {filteredNotices.map((notice) => (
             <li key={`${notice.id}-list-${isSavedTab}`}>
-              <NoticeCard notice={notice} saved={savedIds.has(notice.id)} onSave={handleSave} onUnsave={handleSave} savePending={saveMutation.isPending || unsaveMutation.isPending} showEligibility={!isSavedTab} compact />
+              <NoticeCard notice={notice} saved={savedIds.has(notice.id)} onSave={handleSave} onUnsave={handleSave} savePending={saveMutation.isPending || unsaveMutation.isPending} compact />
             </li>
           ))}
         </ul>

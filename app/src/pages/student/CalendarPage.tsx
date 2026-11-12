@@ -1,16 +1,29 @@
 import { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useUpcomingDeadlines } from '../../hooks/useDeadlineService';
+import { usePersonalEntries } from '../../hooks/usePersonalEntryService';
 import { ErrorState, EmptyState, Skeleton, StatusBadge, CategoryBadge } from '../../components/ui';
 import { Bell, ChevronLeft, ChevronRight, CalendarDays, Clock } from 'lucide-react';
 import { formatDate, daysUntil, cn } from '../../utils/helpers';
-import type { UpcomingDeadline } from '../../types';
+import { ROUTES } from '../../constants';
+import type { Eligibility } from '../../types';
 
-function buildMonth(year: number, month: number, byDate: Map<string, UpcomingDeadline[]>) {
+// A deadline can come from an institution notice or from an entry the student
+// added themselves; both belong on the same calendar.
+type CalendarItem = {
+  id: string;
+  title: string;
+  category: string;
+  deadline: string;
+  eligibility?: Eligibility;
+  href: string;
+};
+
+function buildMonth(year: number, month: number, byDate: Map<string, CalendarItem[]>) {
   const first = new Date(year, month, 1);
   const last = new Date(year, month + 1, 0);
   const startOffset = first.getDay();
-  const cells: Array<{ date: Date | null; deadlines: UpcomingDeadline[] }> = [];
+  const cells: Array<{ date: Date | null; deadlines: CalendarItem[] }> = [];
 
   for (let i = 0; i < startOffset; i++) cells.push({ date: null, deadlines: [] });
   for (let d = 1; d <= last.getDate(); d++) {
@@ -28,20 +41,42 @@ export function CalendarPage() {
   const [view, setView] = useState<'calendar' | 'agenda'>('calendar');
 
   const deadlinesQuery = useUpcomingDeadlines({ days: 90, limit: 50 });
+  const personalQuery = usePersonalEntries({ limit: 100 });
 
   const deadlines = deadlinesQuery.data ?? [];
 
+  const items = useMemo<CalendarItem[]>(() => {
+    const fromNotices: CalendarItem[] = deadlines.flatMap((d) =>
+      d.deadline
+        ? [{ id: d.id, title: d.title, category: d.category, deadline: d.deadline, eligibility: d.eligibility, href: `/student/notices/${d.id}` }]
+        : []
+    );
+    const fromOwnEntries: CalendarItem[] = (personalQuery.data ?? []).flatMap((entry) => {
+      if (!entry.deadline) return [];
+      const days = daysUntil(new Date(entry.deadline));
+      if (days < 0 || days > 90) return [];
+      return [{
+        id: entry.id,
+        title: entry.title,
+        category: entry.category,
+        deadline: entry.deadline,
+        eligibility: entry.eligibility,
+        href: ROUTES.STUDENT_MY_NOTICES,
+      }];
+    });
+    return [...fromNotices, ...fromOwnEntries];
+  }, [deadlines, personalQuery.data]);
+
   const byDate = useMemo(() => {
-    const map = new Map<string, UpcomingDeadline[]>();
-    for (const d of deadlines) {
-      if (!d.deadline) continue;
+    const map = new Map<string, CalendarItem[]>();
+    for (const d of items) {
       const key = new Date(d.deadline).toISOString().slice(0, 10);
       const arr = map.get(key) ?? [];
       arr.push(d);
       map.set(key, arr);
     }
     return map;
-  }, [deadlines]);
+  }, [items]);
 
   const cells = useMemo(() => buildMonth(cursor.year, cursor.month, byDate), [cursor, byDate]);
 
@@ -52,8 +87,8 @@ export function CalendarPage() {
   const goToday = () => setCursor({ year: today.getFullYear(), month: today.getMonth() });
 
   const agenda = useMemo(
-    () => [...deadlines].sort((a, b) => new Date(a.deadline ?? 0).getTime() - new Date(b.deadline ?? 0).getTime()),
-    [deadlines]
+    () => [...items].sort((a, b) => new Date(a.deadline).getTime() - new Date(b.deadline).getTime()),
+    [items]
   );
 
   return (
@@ -61,7 +96,7 @@ export function CalendarPage() {
       <header className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <h1 className="text-h1 font-semibold text-text">Deadlines & Calendar</h1>
-          <p className="text-body text-text-muted mt-1">Every deadline in the next 90 days, from the published notices you can see.</p>
+          <p className="text-body text-text-muted mt-1">Every deadline in the next 90 days, from published notices and the entries you added.</p>
         </div>
         <div className="flex rounded-sm border border-border overflow-hidden w-fit" role="group" aria-label="Calendar view mode">
           <button onClick={() => setView('calendar')} className={cn('px-4 py-2 text-body-sm font-medium', view === 'calendar' ? 'bg-accent text-loud-ink' : 'bg-bg-elevated text-text-muted hover:text-text')} aria-pressed={view === 'calendar'}>Calendar</button>
@@ -81,14 +116,14 @@ export function CalendarPage() {
 
       {deadlinesQuery.isError ? (
         <ErrorState title="Could not load deadlines" action={{ label: 'Retry', onClick: () => deadlinesQuery.refetch() }} />
-      ) : deadlinesQuery.isLoading ? (
+      ) : deadlinesQuery.isLoading || personalQuery.isLoading ? (
         <div className="bg-bg-elevated border border-border rounded-lg p-6">
           <div className="h-6 w-48 bg-border/40 rounded skeleton-shimmer mb-4" />
           <div className="grid grid-cols-7 gap-2">
             {Array.from({ length: 35 }).map((_, i) => <Skeleton key={i} height={80} />)}
           </div>
         </div>
-      ) : deadlines.length === 0 ? (
+      ) : agenda.length === 0 ? (
         <EmptyState
           icon={<CalendarDays className="w-12 h-12" />}
           title="No upcoming deadlines"
@@ -131,7 +166,7 @@ export function CalendarPage() {
                     {cell.deadlines.slice(0, 2).map((dl) => (
                       <Link
                         key={dl.id}
-                        to={`/student/notices/${dl.id}`}
+                        to={dl.href}
                         className="block px-1.5 py-0.5 rounded-sm bg-accent-soft hover:bg-accent hover:text-text-inverted text-caption text-accent truncate transition-colors"
                         title={dl.title}
                       >
@@ -151,15 +186,15 @@ export function CalendarPage() {
         <section aria-label="Deadline agenda">
           <ul className="bg-bg-elevated border border-border rounded-lg divide-y divide-border">
             {agenda.map((item) => {
-              const d = item.deadline ? daysUntil(new Date(item.deadline)) : null;
+              const d = daysUntil(new Date(item.deadline));
               return (
                 <li key={item.id}>
-                  <Link to={`/student/notices/${item.id}`} className="flex items-center gap-4 px-4 py-3.5 hover:bg-bg-hover transition-colors">
+                  <Link to={item.href} className="flex items-center gap-4 px-4 py-3.5 hover:bg-bg-hover transition-colors">
                     <span className={cn(
                       'flex-shrink-0 w-14 text-center rounded-md py-1.5',
-                      d !== null && d <= 3 ? 'bg-danger-soft text-danger' : d !== null && d <= 7 ? 'bg-warning-soft text-warning' : 'bg-info-soft text-info'
+                      d <= 3 ? 'bg-danger-soft text-danger' : d <= 7 ? 'bg-warning-soft text-warning' : 'bg-info-soft text-info'
                     )}>
-                      <span className="block text-body-sm font-bold">{d !== null ? `${d}` : '—'}</span>
+                      <span className="block text-body-sm font-bold">{d}</span>
                       <span className="block text-caption">days</span>
                     </span>
                     <span className="min-w-0 flex-1">
@@ -169,7 +204,7 @@ export function CalendarPage() {
                         {item.eligibility && <StatusBadge status={item.eligibility.status} type="eligibility" size="sm" />}
                         <span className="text-caption text-text-muted inline-flex items-center gap-1">
                           <Clock className="w-3.5 h-3.5" aria-hidden="true" />
-                          {item.deadline ? formatDate(item.deadline) : ''}
+                          {formatDate(item.deadline)}
                         </span>
                       </span>
                     </span>
