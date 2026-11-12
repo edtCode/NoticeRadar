@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import {
-  FileText, Bookmark, CalendarClock, Target, ChevronRight, Inbox, AlertTriangle, Clock,
+  FileText, Bookmark, CalendarClock, Target, ChevronRight, Inbox, AlertTriangle, Clock, FilePlus2,
 } from 'lucide-react';
 import { noticeService } from '../../services/notice.service';
 import { deadlineService } from '../../services/deadline.service';
@@ -10,6 +10,7 @@ import { useAuthStore } from '../../stores/authStore';
 import { NoticeCard } from '../../components/notices/NoticeCard';
 import { CategoryBadge, StatusBadge, Button, ErrorState, NoticeCardSkeleton, DashboardStatCardSkeleton } from '../../components/ui';
 import { useSaveNotice, useUnsaveNotice, useSavedNotices } from '../../hooks/useNoticeService';
+import { usePersonalEntries } from '../../hooks/usePersonalEntryService';
 import { AnimatedNumber } from '../../components/motion';
 import { formatDate, daysUntil } from '../../utils/helpers';
 import { NOTICE_CATEGORIES, NOTICE_CATEGORY_LABELS, ROUTES } from '../../constants';
@@ -34,6 +35,7 @@ export function StudentDashboard() {
   });
 
   const savedQuery = useSavedNotices({ page: 1, limit: 1 });
+  const personalQuery = usePersonalEntries({ limit: 4 });
 
   const saveMutation = useSaveNotice();
   const unsaveMutation = useUnsaveNotice();
@@ -66,7 +68,7 @@ export function StudentDashboard() {
         </p>
         {user && (
           <p className="text-caption text-text-muted mt-1">
-            {user.name} · Sem 6 · Update details any time from{' '}
+            {user.name} · Update your details any time from{' '}
             <Link to={ROUTES.STUDENT_PROFILE} className="text-accent hover:underline">your profile</Link>.
           </p>
         )}
@@ -126,7 +128,7 @@ export function StudentDashboard() {
           <ErrorState
             icon={<AlertTriangle className="w-8 h-8" />}
             title="Could not load your feed"
-            message="There was a problem reaching the notice service. Retry, or check your connection."
+            message={feedQuery.error instanceof Error ? feedQuery.error.message : 'There was a problem reaching the notice service. Retry, or check your connection.'}
             action={{ label: 'Retry', onClick: () => feedQuery.refetch() }}
           />
         ) : feedQuery.isLoading ? (
@@ -168,7 +170,12 @@ export function StudentDashboard() {
         </div>
 
         {deadlinesQuery.isError ? (
-          <ErrorState icon={<AlertTriangle className="w-8 h-8" />} title="Could not load deadlines" action={{ label: 'Retry', onClick: () => deadlinesQuery.refetch() }} />
+          <ErrorState
+            icon={<AlertTriangle className="w-8 h-8" />}
+            title="Could not load deadlines"
+            message={deadlinesQuery.error instanceof Error ? deadlinesQuery.error.message : undefined}
+            action={{ label: 'Retry', onClick: () => deadlinesQuery.refetch() }}
+          />
         ) : deadlinesQuery.isLoading ? (
           <div className="space-y-2">{Array.from({ length: 3 }).map((_, i) => <div key={i} className="h-16 bg-border/40 rounded-md skeleton-shimmer" />)}</div>
         ) : deadlines.length === 0 ? (
@@ -203,6 +210,59 @@ export function StudentDashboard() {
                     </span>
                     <ChevronRight className="w-5 h-5 text-text-muted flex-shrink-0 group-hover:text-accent" aria-hidden="true" />
                   </Link>
+                </li>
+              );
+            })}
+          </ul>
+        )}
+      </section>
+
+      {/* Notices and events the student tracks themselves */}
+      <section aria-labelledby="personal-heading">
+        <div className="flex items-center justify-between mb-4">
+          <h2 id="personal-heading" className="text-h3 font-semibold text-text">My notices &amp; events</h2>
+          <Link to={ROUTES.STUDENT_MY_NOTICES} className="text-body-sm text-accent hover:underline inline-flex items-center gap-1">
+            <FilePlus2 className="w-4 h-4" aria-hidden="true" /> Add or manage
+          </Link>
+        </div>
+
+        {personalQuery.isError ? (
+          <ErrorState
+            icon={<AlertTriangle className="w-8 h-8" />}
+            title="Could not load your entries"
+            message={personalQuery.error instanceof Error ? personalQuery.error.message : undefined}
+            action={{ label: 'Retry', onClick: () => personalQuery.refetch() }}
+          />
+        ) : personalQuery.isLoading ? (
+          <div className="space-y-2">{Array.from({ length: 2 }).map((_, i) => <div key={i} className="h-16 bg-border/40 rounded-md skeleton-shimmer" />)}</div>
+        ) : (personalQuery.data ?? []).length === 0 ? (
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 bg-bg-elevated border border-border rounded-lg">
+            <p className="text-body-sm text-text-muted">
+              Got a notice by email or on a noticeboard that is not published here? Add it yourself with its details or the original PDF.
+            </p>
+            <Link to={ROUTES.STUDENT_MY_NOTICES} className="btn-secondary h-9 px-3 inline-flex items-center gap-2 flex-shrink-0">
+              <FilePlus2 className="w-4 h-4" aria-hidden="true" /> Add an entry
+            </Link>
+          </div>
+        ) : (
+          <ul className="bg-bg-elevated border border-border rounded-lg divide-y divide-border">
+            {(personalQuery.data ?? []).map((entry) => {
+              const remaining = entry.deadline ? daysUntil(new Date(entry.deadline)) : null;
+              return (
+                <li key={entry.id} className="flex items-center gap-3 px-4 py-3">
+                  <span className={`flex-shrink-0 w-12 text-center rounded-md px-1 py-1.5 text-caption font-semibold ${
+                    remaining !== null && remaining <= 3 ? 'bg-danger-soft text-danger' : remaining !== null && remaining <= 7 ? 'bg-warning-soft text-warning' : 'bg-info-soft text-info'
+                  }`}>
+                    {remaining !== null ? `${remaining}d` : '—'}
+                  </span>
+                  <span className="min-w-0 flex-1">
+                    <span className="block text-body font-medium text-text truncate">{entry.title}</span>
+                    <span className="mt-0.5 flex items-center gap-2">
+                      <CategoryBadge category={entry.category} size="sm" dot={false} />
+                      <span className="text-caption text-text-muted">{entry.deadline ? formatDate(entry.deadline) : 'No deadline'}</span>
+                    </span>
+                  </span>
+                  <Link to={ROUTES.STUDENT_MY_NOTICES} className="text-body-sm text-accent hover:underline flex-shrink-0">Open</Link>
                 </li>
               );
             })}

@@ -47,6 +47,7 @@ export const ROUTES = {
   STUDENT_SEARCH: '/student/search',
   STUDENT_NOTIFICATIONS: '/student/notifications',
   STUDENT_PROFILE: '/student/profile',
+  STUDENT_MY_NOTICES: '/student/my-notices',
   STUDENT_HELP: '/student/help',
 
   // Admin

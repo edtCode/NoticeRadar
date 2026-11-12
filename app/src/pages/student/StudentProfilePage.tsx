@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -7,7 +8,7 @@ import { useStudentProfile, useUpdateStudentProfile } from '../../hooks/useAuthS
 import { Input, Textarea, Select } from '../../components/ui/Input';
 import { Button, ErrorState, Badge, Avatar } from '../../components/ui';
 import { useAddToast } from '../../stores/uiStore';
-import { INTEREST_OPTIONS, BRANCH_OPTIONS, SEMESTER_OPTIONS } from '../../constants';
+import { INTEREST_OPTIONS, BRANCH_OPTIONS, SEMESTER_OPTIONS, ROUTES } from '../../constants';
 
 const profileSchema = z.object({
   branch: z.string().min(1, 'Select your branch'),
@@ -104,13 +105,33 @@ export function StudentProfilePage() {
     );
   }
 
-  if (profileQuery.isError || !profile || !record) {
+  if (!profileQuery.isError && profile && !record) {
+    return (
+      <div className="max-w-3xl space-y-6">
+        <header>
+          <h1 className="text-h1 font-semibold text-text">My Profile</h1>
+          <p className="text-body text-text-muted mt-1">Your details drive the eligibility engine — set them up to unlock your feed.</p>
+        </header>
+        <div className="bg-bg-elevated border border-border rounded-lg p-8 text-center">
+          <h2 className="text-h4 font-semibold text-text mb-2">Finish setting up your profile</h2>
+          <p className="text-body text-text-muted max-w-md mx-auto mb-6">
+            Add your institution, department, branch, semester, CPI and interests. Until then your feed and deadlines stay empty.
+          </p>
+          <Link to={ROUTES.ONBOARDING} className="btn-primary h-10 px-4 inline-flex items-center gap-2">
+            Complete your details
+          </Link>
+        </div>
+      </div>
+    );
+  }
+
+  if (profileQuery.isError || !profile) {
     return (
       <div className="max-w-3xl">
         <h1 className="text-h1 font-semibold text-text mb-6">My Profile</h1>
         <ErrorState
           title="Could not load your profile"
-          message="Your academic profile is required for personalised feeds and eligibility results."
+          message={profileQuery.error instanceof Error ? profileQuery.error.message : 'Your academic profile is required for personalised feeds and eligibility results.'}
           action={{ label: 'Retry', onClick: () => profileQuery.refetch() }}
         />
       </div>

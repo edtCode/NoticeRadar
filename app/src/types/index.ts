@@ -369,3 +369,34 @@ export interface NoticeFiltersState {
     deadlineTo: string;
     sort: "recent" | "deadline";
 }
+
+export type PersonalEntrySource = 'MANUAL' | 'UPLOAD' | 'EMAIL';
+
+export interface PersonalEntry {
+    id: string;
+    title: string;
+    description: string | null;
+    category: NoticeCategory;
+    deadline: string | null;
+    event_date: string | null;
+    source: PersonalEntrySource;
+    source_email: string | null;
+    file_name: string | null;
+    file_size: number | null;
+    created_at: string;
+    updated_at: string;
+}
+
+export interface PersonalEntryPayload {
+    title: string;
+    description?: string;
+    category?: NoticeCategory;
+    deadline?: string | null;
+    eventDate?: string | null;
+}
+
+export interface PersonalEntryFileResult {
+    entry: PersonalEntry;
+    signedUrl: string;
+    expiresIn: number;
+}

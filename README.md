@@ -44,6 +44,21 @@ npm install && npm run dev
 
 Copy `app/.env.example` to `app/.env` for local frontend values.
 
+### Database migrations
+
+`supabase/migrations/*.sql` are applied in filename order. Either paste a new
+migration into the Supabase SQL editor, or run them all over a direct
+connection:
+
+```bash
+DATABASE_URL=postgresql://... node scripts/apply-migrations.mjs
+```
+
+`20261112120000_personal_entries.sql` creates the `personal_entries` table and
+the private `personal-files` storage bucket used by **My Notices & Events**
+(`/student/my-notices`) and the `/api/v1/me/entries` endpoints. Without it those
+endpoints fail — the rest of the app is unaffected.
+
 ## Email (Resend)
 
 Signup confirmation emails are sent through [Resend](https://resend.com) so

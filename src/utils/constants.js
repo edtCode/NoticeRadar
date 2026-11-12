@@ -19,3 +19,4 @@ export const USER_ROLES = [
 ];
 
 export const NOTICE_FILES_BUCKET = "notice-files";
+export const PERSONAL_FILES_BUCKET = "personal-files";

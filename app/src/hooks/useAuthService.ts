@@ -47,6 +47,9 @@ export function useCreateStudentProfile() {
     mutationFn: (payload: StudentProfilePayload) => authService.createStudentProfile(payload),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['students', 'profile'] });
+      queryClient.invalidateQueries({ queryKey: ['auth', 'me'] });
+      queryClient.invalidateQueries({ queryKey: ['notices'] });
+      queryClient.invalidateQueries({ queryKey: ['deadlines'] });
     },
   });
 }

@@ -1,7 +1,7 @@
 import { useState, type ReactNode } from 'react';
 import { Outlet, Link, useLocation, NavLink, useNavigate } from 'react-router-dom';
 import { cn } from '../utils/helpers';
-import { Menu, X, Bell, User, LogOut, ChevronLeft, ChevronRight, ChevronDown, Search, Bookmark, Calendar, HelpCircle, FileText, Clock, Archive } from 'lucide-react';
+import { Menu, X, Bell, User, LogOut, ChevronLeft, ChevronRight, ChevronDown, Search, Bookmark, Calendar, HelpCircle, FileText, Clock, Archive, FilePlus2 } from 'lucide-react';
 import { useAuthStore } from '../stores/authStore';
 import { useUIStore } from '../stores/uiStore';
 import { Button } from '../components/ui';
@@ -15,6 +15,7 @@ type SidebarItem = { label: string; href: string; icon: ReactNode; isLogout?: bo
 const STUDENT_SIDEBAR_ITEMS: SidebarItem[] = [
   { label: 'Dashboard', href: '/student/dashboard', icon: <Home className="w-5 h-5" /> },
   { label: 'All Notices', href: '/student/notices', icon: <FileText className="w-5 h-5" /> },
+  { label: 'My Notices', href: '/student/my-notices', icon: <FilePlus2 className="w-5 h-5" /> },
   { label: 'Saved Notices', href: '/student/saved', icon: <Bookmark className="w-5 h-5" /> },
   { label: 'Deadlines', href: '/student/calendar', icon: <Calendar className="w-5 h-5" /> },
   { label: 'Search Notices', href: '/student/search', icon: <Search className="w-5 h-5" /> },

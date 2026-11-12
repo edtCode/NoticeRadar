@@ -11,7 +11,7 @@ const safeFileName = (name) => {
     return path.basename(name || "document.pdf").replace(/[^a-zA-Z0-9._ -]/g, "_").slice(0, 200);
 };
 
-const isPdf = (file) => {
+export const isPdf = (file) => {
     return file?.mimetype === "application/pdf" &&
         file.buffer?.subarray(0, PDF_SIGNATURE.length).toString("latin1") === PDF_SIGNATURE;
 };
