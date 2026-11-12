@@ -3,7 +3,29 @@
 export const APP_NAME = 'NoticeRadar';
 export const APP_DESCRIPTION = 'Never miss an important college notice again';
 
-export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:4000/api/v1';
+// Production builds must never point at localhost: a deployed site whose env
+// var is missing (or left at a dev value) would send every request to the
+// visitor's own machine.
+const PRODUCTION_API_BASE_URL = 'https://noticeradar.onrender.com/api/v1';
+const DEVELOPMENT_API_BASE_URL = 'http://localhost:4000/api/v1';
+const DEFAULT_API_BASE_URL = import.meta.env.PROD ? PRODUCTION_API_BASE_URL : DEVELOPMENT_API_BASE_URL;
+
+const RAW_API_BASE_URL: string = import.meta.env.VITE_API_BASE_URL || DEFAULT_API_BASE_URL;
+
+const isLocalhostUrl = (url: string): boolean =>
+  /^https?:\/\/(localhost|127\.0\.0\.1|\[::1\])(?::\d+)?(?:\/|$)/i.test(url);
+
+// Every API route is mounted under /api/v1. Accept a bare host
+// ("https://api.example.com") and append the prefix, so a deployment can't
+// silently send requests to "/auth/register" and get a 404 instead of an answer.
+const withApiPrefix = (url: string): string => {
+  const trimmed = url.trim().replace(/\/+$/, '');
+  if (!trimmed) return DEFAULT_API_BASE_URL;
+  if (import.meta.env.PROD && isLocalhostUrl(trimmed)) return PRODUCTION_API_BASE_URL;
+  return /\/api\/v\d+$/.test(trimmed) ? trimmed : `${trimmed}/api/v1`;
+};
+
+export const API_BASE_URL = withApiPrefix(RAW_API_BASE_URL);
 export const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL || '';
 export const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY || '';
 

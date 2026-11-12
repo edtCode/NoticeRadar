@@ -42,6 +42,23 @@ const ensureProfile = async (adminClient, user) => {
         .single();
 
     if (insertError) {
+        if (insertError.code === "23505") {
+            // Another request created the profile between our read and write.
+            const { data: raced, error: racedError } = await adminClient
+                .from("profiles")
+                .select("id, name, email, role, institution_id")
+                .eq("id", user.id)
+                .maybeSingle();
+
+            if (racedError) {
+                throw databaseError(racedError);
+            }
+
+            if (raced) {
+                return raced;
+            }
+        }
+
         throw databaseError(insertError);
     }
 
@@ -60,15 +77,36 @@ export const registerUser = async ({ publicClient, adminClient }, payload) => {
     });
 
     if (error) {
-        if (/already registered|already exists/i.test(error.message)) {
+        const message = error.message ?? "";
+        const code = error.code ?? "";
+
+        if (code === "user_already_exists" || /already registered|already exists/i.test(message)) {
             throw new ApiError(409, "Email already registered");
         }
 
-        if (/rate limit|too many requests/i.test(error.message)) {
-            throw new ApiError(429, "Too many registration emails right now, please try again later");
+        // Supabase's built-in mailer is limited to a couple of emails per hour.
+        // Without a custom SMTP provider, repeated signups hit this wall first.
+        if (code === "over_email_send_rate_limit" || error.status === 429 ||
+            /rate limit|too many requests|only request this after/i.test(message)) {
+            throw new ApiError(
+                429,
+                "Too many confirmation emails were sent from this project in the last hour. Please try again later, or configure a custom SMTP provider in Supabase."
+            );
         }
 
-        throw new ApiError(400, error.message);
+        if (code === "signup_disabled" || /signups? not allowed|signup is disabled/i.test(message)) {
+            throw new ApiError(403, "New sign-ups are disabled for this project");
+        }
+
+        if (/unable to validate email address|invalid email/i.test(message)) {
+            throw new ApiError(400, "Enter a valid email address");
+        }
+
+        if (code === "weak_password" || /password should be at least/i.test(message)) {
+            throw new ApiError(400, message || "Password is too weak");
+        }
+
+        throw new ApiError(400, message || "Registration failed");
     }
 
     if (!data.user) {

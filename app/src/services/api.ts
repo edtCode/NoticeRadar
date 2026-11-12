@@ -1,9 +1,7 @@
 import axios, { type AxiosInstance, type AxiosError, type InternalAxiosRequestConfig } from 'axios';
 import { createClient, type SupabaseClient } from '@supabase/supabase-js';
 import type { ApiErrorPayload } from '../types';
-import { SUPABASE_ANON_KEY, SUPABASE_URL } from '../constants';
-
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:4000/api/v1';
+import { API_BASE_URL, SUPABASE_ANON_KEY, SUPABASE_URL } from '../constants';
 
 class ApiClient {
   private client: AxiosInstance;

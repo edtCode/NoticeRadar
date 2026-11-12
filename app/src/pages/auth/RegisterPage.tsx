@@ -23,6 +23,17 @@ const registerSchema = z
 
 type RegisterForm = z.infer<typeof registerSchema>;
 
+function registrationErrorMessage(error: unknown): string {
+  const raw = error && typeof error === 'object' && 'message' in error ? (error as { message?: unknown }).message : undefined;
+  const message = typeof raw === 'string' ? raw.trim() : '';
+
+  if (!message || message === 'Network Error') {
+    return 'Could not reach the server. Check your connection and try again.';
+  }
+
+  return message;
+}
+
 function passwordChecks(password: string) {
   return [
     { label: 'At least 8 characters', ok: password.length >= 8 },
@@ -110,7 +121,7 @@ export function RegisterPage() {
           {registerMutation.isError && (
             <div className="flex items-start gap-2 p-3 bg-danger-soft border border-danger rounded-sm" role="alert">
               <AlertCircle className="w-5 h-5 text-danger flex-shrink-0 mt-0.5" aria-hidden="true" />
-              <p className="text-body-sm text-danger">Registration failed. Check your details and try again.</p>
+              <p className="text-body-sm text-danger">{registrationErrorMessage(registerMutation.error)}</p>
             </div>
           )}
 
