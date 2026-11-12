@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import personalEntryService from '../services/personalEntry.service';
-import type { PersonalEntry, PersonalEntryPayload } from '../types';
+import type { PersonalEntry, PersonalEntryDraft, PersonalEntryPayload } from '../types';
 
 const ENTRIES_KEY = ['personal-entries'] as const;
 
@@ -43,6 +43,13 @@ export function useDeletePersonalEntry() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ENTRIES_KEY });
     },
+  });
+}
+
+export function useExtractPersonalEntryDraft() {
+  return useMutation<PersonalEntryDraft, Error, { file: File } | { text: string }>({
+    mutationFn: (source) =>
+      'file' in source ? personalEntryService.extractFromFile(source.file) : personalEntryService.extractFromText(source.text),
   });
 }
 

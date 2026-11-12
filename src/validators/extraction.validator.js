@@ -30,6 +30,17 @@ export const extractionSchema = z.object({
     { message: "minimumSemester cannot be greater than maximumSemester", path: ["minimumSemester"] }
 );
 
+// Personal entries only keep the handful of fields the student sees in their
+// own list, so the extraction result is intentionally narrower.
+export const personalExtractionSchema = z.object({
+    title: z.string().trim().min(1).max(200).nullable(),
+    description: z.string().trim().min(1).max(5000).nullable(),
+    category: z.enum(NOTICE_CATEGORIES).nullable(),
+    deadline: dateOnly.nullable(),
+    eventDate: dateOnly.nullable(),
+    ambiguousFields: z.array(z.string().trim().min(1).max(100)).max(30).default([])
+});
+
 export const reviewSchema = z.object({
     title: z.string().trim().min(3).max(300).optional(),
     summary: z.string().trim().max(2000).nullable().optional(),

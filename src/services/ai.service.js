@@ -1,6 +1,6 @@
 import { env } from "../config/env.js";
 import { ApiError } from "../utils/errors.js";
-import { extractionSchema } from "../validators/extraction.validator.js";
+import { extractionSchema, personalExtractionSchema } from "../validators/extraction.validator.js";
 
 const REQUEST_TIMEOUT_MS = 30000;
 const MAX_ATTEMPTS = 2;
@@ -22,6 +22,21 @@ Rules:
   eligibleGraduationYears, requiresNoBacklogs, requiredDocuments, duration, applicationUrl, ambiguousFields, evidence.
 - category must be one of: PLACEMENT, INTERNSHIP, SCHOLARSHIP, EXAM, EVENT, GENERAL.
 - deadline must be YYYY-MM-DD or null.
+`;
+
+const PERSONAL_SYSTEM_PROMPT = `
+You extract the key details of a college notice or event from a document the student uploaded or pasted, so they do not have to type them.
+
+Rules:
+- Use only information explicitly present in the text.
+- Never invent deadlines, event dates, titles or categories.
+- title: a short, specific title (max 200 characters). If the document has no title, write one from the content.
+- description: 1-3 sentences covering eligibility, venue, links or anything else the student would want to remember.
+- category must be one of: PLACEMENT, INTERNSHIP, SCHOLARSHIP, EXAM, EVENT, GENERAL.
+- deadline and eventDate must be YYYY-MM-DD or null. If a date has no year, return null and add the field name to ambiguousFields.
+- Use null for anything the text does not state, and [] for ambiguousFields when nothing is unclear.
+- Respond with a single JSON object only, with these keys:
+  title, description, category, deadline, eventDate, ambiguousFields.
 `;
 
 const getConfig = () => {
@@ -105,7 +120,7 @@ const parseContent = (content) => {
     }
 };
 
-const requestCompletion = async (config, userPrompt) => {
+const requestCompletion = async (config, userPrompt, systemPrompt = SYSTEM_PROMPT) => {
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
 
@@ -121,7 +136,7 @@ const requestCompletion = async (config, userPrompt) => {
                 model: config.model,
                 temperature: 0,
                 messages: [
-                    { role: "system", content: SYSTEM_PROMPT },
+                    { role: "system", content: systemPrompt },
                     { role: "user", content: userPrompt }
                 ],
                 response_format: { type: "json_object" }
@@ -144,12 +159,12 @@ const requestCompletion = async (config, userPrompt) => {
     }
 };
 
-const requestWithRetry = async (config, userPrompt) => {
+const requestWithRetry = async (config, userPrompt, systemPrompt = SYSTEM_PROMPT) => {
     let lastError;
 
     for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt += 1) {
         try {
-            return await requestCompletion(config, userPrompt);
+            return await requestCompletion(config, userPrompt, systemPrompt);
         } catch (error) {
             lastError = error;
 
@@ -187,6 +202,22 @@ export const extractNoticeFromText = async (pages) => {
     const content = await requestWithRetry(config, buildUserPrompt(pages));
     const parsed = normalizeExtraction(parseContent(content));
     const result = extractionSchema.safeParse(parsed);
+
+    if (!result.success) {
+        const firstIssue = result.error.issues[0];
+        throw new ApiError(422, `AI provider returned invalid extraction data: ${firstIssue.path.join(".")} ${firstIssue.message}`);
+    }
+
+    return result.data;
+};
+
+// Used by the student's own "Add a notice or event" flow, where the document is
+// read and the form filled in for them instead of being sent to review.
+export const extractPersonalEntryFromText = async (pages) => {
+    const config = getConfig();
+    const content = await requestWithRetry(config, buildUserPrompt(pages), PERSONAL_SYSTEM_PROMPT);
+    const parsed = normalizeExtraction(parseContent(content));
+    const result = personalExtractionSchema.safeParse(parsed);
 
     if (!result.success) {
         const firstIssue = result.error.issues[0];

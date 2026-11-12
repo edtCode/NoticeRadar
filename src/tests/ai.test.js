@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { extractNoticeFromText } from "../services/ai.service.js";
+import { extractNoticeFromText, extractPersonalEntryFromText } from "../services/ai.service.js";
 import { env } from "../config/env.js";
 import { ApiError } from "../utils/errors.js";
 
@@ -90,6 +90,34 @@ test("object-shaped evidence from the provider is normalised into the expected a
         { field: "deadline", pageNumber: null, text: "Deadline 2026-11-30" },
         { field: "summary", pageNumber: 2, text: "Summer internship" }
     ]);
+});
+
+test("personal entry extraction keeps only the fields the student edits", async () => {
+    let requestBody;
+
+    const personal = {
+        title: "TCS campus drive",
+        description: "Open to final-year CSE students. Apply on the portal.",
+        category: "placement",
+        deadline: "2026-12-10",
+        eventDate: "2026-12-15",
+        ambiguousFields: [],
+        evidence: [{ field: "deadline", pageNumber: 1, text: "10 December 2026" }]
+    };
+
+    const result = await withFetch(
+        async (url, options) => {
+            requestBody = JSON.parse(options.body);
+            return completionResponse(JSON.stringify(personal));
+        },
+        () => extractPersonalEntryFromText(pages)
+    );
+
+    assert.equal(result.title, "TCS campus drive");
+    assert.equal(result.category, "PLACEMENT");
+    assert.equal(result.deadline, "2026-12-10");
+    assert.equal(result.eventDate, "2026-12-15");
+    assert.match(requestBody.messages[0].content, /eventDate/);
 });
 
 test("malformed AI JSON is rejected with a 422", async () => {

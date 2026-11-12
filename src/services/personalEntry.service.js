@@ -3,8 +3,12 @@ import { randomUUID } from "node:crypto";
 import { ApiError, databaseError } from "../utils/errors.js";
 import { PERSONAL_FILES_BUCKET } from "../utils/constants.js";
 import { isPdf } from "./storage.service.js";
+import { extractTextFromPdf } from "./pdf.service.js";
+import { extractPersonalEntryFromText } from "./ai.service.js";
 
 const SIGNED_URL_TTL = 600;
+const MINIMUM_TEXT_LENGTH = 20;
+const MAXIMUM_TEXT_LENGTH = 20000;
 
 const ENTRY_COLUMNS = `
     id,
@@ -92,6 +96,49 @@ export const listPersonalEntries = async (supabase, userId, { upcoming, limit })
     }
 
     return data ?? [];
+};
+
+// Reads the uploaded PDF (or the pasted text) and returns the form fields, so
+// the student only reviews and saves instead of typing everything by hand.
+export const draftPersonalEntryFromSource = async ({ file, text }) => {
+    let pages;
+
+    if (file) {
+        if (!isPdf(file)) {
+            throw new ApiError(400, "Only valid PDF files are allowed");
+        }
+
+        const document = await extractTextFromPdf(file.buffer);
+
+        if (document.status === "OCR_REQUIRED") {
+            throw new ApiError(422, document.message);
+        }
+
+        pages = document.pages;
+    } else {
+        const value = (text ?? "").trim();
+
+        if (value.length < MINIMUM_TEXT_LENGTH) {
+            throw new ApiError(400, "Upload a PDF or paste a few lines of the notice text");
+        }
+
+        if (value.length > MAXIMUM_TEXT_LENGTH) {
+            throw new ApiError(400, "The pasted text is too long");
+        }
+
+        pages = [{ pageNumber: 1, text: value }];
+    }
+
+    const extraction = await extractPersonalEntryFromText(pages);
+
+    return {
+        title: extraction.title ?? "",
+        description: extraction.description ?? "",
+        category: extraction.category ?? "GENERAL",
+        deadline: extraction.deadline,
+        eventDate: extraction.eventDate,
+        ambiguousFields: extraction.ambiguousFields
+    };
 };
 
 export const createPersonalEntry = async (supabase, userId, payload) => {

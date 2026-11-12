@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { AlertTriangle, CalendarPlus, FileText, Inbox, Loader2, Paperclip, Trash2, Upload } from 'lucide-react';
+import { AlertTriangle, CalendarPlus, CheckCircle2, FileText, Inbox, Loader2, Paperclip, Sparkles, Trash2, Upload } from 'lucide-react';
 import { PageHeader } from '../../components/common/PageHeader';
 import { Input, Textarea, Select } from '../../components/ui/Input';
 import { Button, CategoryBadge, ErrorState } from '../../components/ui';
@@ -12,12 +12,13 @@ import {
   useCreatePersonalEntry,
   useDeletePersonalEntry,
   useUploadPersonalEntryFile,
+  useExtractPersonalEntryDraft,
 } from '../../hooks/usePersonalEntryService';
 import personalEntryService from '../../services/personalEntry.service';
 import { NOTICE_CATEGORIES, NOTICE_CATEGORY_LABELS, FILE_UPLOAD } from '../../constants';
 import { formatDate, daysUntil } from '../../utils/helpers';
 import { formatBytes } from '../../utils/format';
-import type { NoticeCategory, PersonalEntry } from '../../types';
+import type { NoticeCategory, PersonalEntry, PersonalEntryDraft } from '../../types';
 
 const entrySchema = z.object({
   title: z.string().trim().min(1, 'Give this notice a title').max(200, 'Title is too long'),
@@ -35,31 +36,69 @@ const toIso = (value?: string) => {
   return Number.isNaN(parsed.getTime()) ? null : parsed.toISOString();
 };
 
+// The extractor only knows the day; a deadline is read as end of day and an
+// event as the start of the day until the student adjusts it.
+const toDateTimeInput = (date: string | null, time: string) => (date ? `${date}T${time}` : '');
+
 export function MyNoticesPage() {
   const addToast = useAddToast();
   const entriesQuery = usePersonalEntries();
   const createMutation = useCreatePersonalEntry();
   const uploadMutation = useUploadPersonalEntryFile();
   const deleteMutation = useDeletePersonalEntry();
+  const extractMutation = useExtractPersonalEntryDraft();
 
   const [file, setFile] = useState<File | null>(null);
   const [fileError, setFileError] = useState<string | null>(null);
   const [progress, setProgress] = useState(0);
   const [confirmingId, setConfirmingId] = useState<string | null>(null);
+  const [pastedText, setPastedText] = useState('');
+  const [extractionNote, setExtractionNote] = useState<string | null>(null);
 
   const {
     register,
     handleSubmit,
     reset,
+    setValue,
     formState: { errors },
   } = useForm<EntryForm>({
     resolver: zodResolver(entrySchema),
     defaultValues: { title: '', description: '', category: 'GENERAL', deadline: '', eventDate: '' },
   });
 
+  const applyDraft = (draft: PersonalEntryDraft) => {
+    setValue('title', draft.title, { shouldValidate: true, shouldDirty: true });
+    setValue('description', draft.description, { shouldValidate: true, shouldDirty: true });
+    setValue('category', draft.category, { shouldDirty: true });
+    setValue('deadline', toDateTimeInput(draft.deadline, '23:59'), { shouldDirty: true });
+    setValue('eventDate', toDateTimeInput(draft.eventDate, '09:00'), { shouldDirty: true });
+
+    const unclear = draft.ambiguousFields.join(', ');
+    setExtractionNote(
+      draft.ambiguousFields.length
+        ? `Filled from your document. Double-check ${unclear} — it was not clear from the text.`
+        : 'Filled from your document. Have a quick look, then save.'
+    );
+  };
+
+  const runExtraction = async (source: { file: File } | { text: string }) => {
+    setExtractionNote(null);
+    try {
+      const draft = await extractMutation.mutateAsync(source);
+      applyDraft(draft);
+    } catch (error) {
+      addToast({
+        type: 'error',
+        title: 'Could not read that document',
+        message: error instanceof Error ? error.message : 'Try another PDF, or paste the text instead.',
+      });
+    }
+  };
+
   const onFileChange = (selected: File | null) => {
     setFileError(null);
     setProgress(0);
+    setExtractionNote(null);
     if (!selected) {
       setFile(null);
       return;
@@ -75,6 +114,7 @@ export function MyNoticesPage() {
       return;
     }
     setFile(selected);
+    void runExtraction({ file: selected });
   };
 
   const onSubmit = handleSubmit(async (data) => {
@@ -101,6 +141,8 @@ export function MyNoticesPage() {
 
       reset();
       onFileChange(null);
+      setPastedText('');
+      setExtractionNote(null);
       addToast({ type: 'success', title: 'Added to your radar', message: 'It now appears in your tracked notices and deadlines.' });
     } catch (error) {
       addToast({
@@ -125,7 +167,7 @@ export function MyNoticesPage() {
   };
 
   const entries = entriesQuery.data ?? [];
-  const busy = createMutation.isPending || uploadMutation.isPending;
+  const busy = createMutation.isPending || uploadMutation.isPending || extractMutation.isPending;
 
   return (
     <div className="max-w-4xl space-y-8">
@@ -141,6 +183,72 @@ export function MyNoticesPage() {
         </h2>
 
         <form onSubmit={onSubmit} className="space-y-4" noValidate>
+          <div className="rounded-md border border-dashed border-border p-4 space-y-3">
+            <div className="flex items-start gap-2">
+              <Sparkles className="w-5 h-5 text-accent flex-shrink-0 mt-0.5" aria-hidden="true" />
+              <div>
+                <p className="text-body-sm font-medium text-text">Autofill from your document</p>
+                <p className="text-caption text-text-muted">
+                  Upload the PDF or paste its text — we read the title, category, deadline and event date so you do not have
+                  to type them.
+                </p>
+              </div>
+            </div>
+
+            <label
+              htmlFor="personal-file"
+              className="flex items-center gap-3 p-3 bg-bg-elevated border border-border rounded-md cursor-pointer hover:border-border-strong transition-colors"
+            >
+              <Paperclip className="w-5 h-5 text-text-muted" aria-hidden="true" />
+              <span className="text-body-sm text-text-muted truncate">
+                {file ? `${file.name} · ${formatBytes(file.size)}` : 'Choose a PDF up to 5 MB'}
+              </span>
+            </label>
+            <input
+              id="personal-file"
+              type="file"
+              accept="application/pdf"
+              className="sr-only"
+              onChange={(event) => onFileChange(event.target.files?.[0] ?? null)}
+            />
+            {fileError && <p className="text-body-sm text-danger" role="alert">{fileError}</p>}
+            {extractMutation.isPending && (
+              <p className="text-caption text-text-muted flex items-center gap-2">
+                <Loader2 className="w-3.5 h-3.5 animate-spin" aria-hidden="true" /> Reading your document…
+              </p>
+            )}
+
+            <div className="space-y-2">
+              <Textarea
+                name="pasted-text"
+                label="Or paste the notice text"
+                rows={3}
+                placeholder="Paste a paragraph with the details — dates, eligibility, venue, links."
+                value={pastedText}
+                onChange={(event) => setPastedText(event.target.value)}
+              />
+              <div className="flex justify-end">
+                <Button
+                  type="button"
+                  variant="secondary"
+                  className="h-9"
+                  loading={extractMutation.isPending}
+                  disabled={pastedText.trim().length < 20}
+                  onClick={() => runExtraction({ text: pastedText })}
+                >
+                  <Sparkles className="w-4 h-4" aria-hidden="true" /> Extract details
+                </Button>
+              </div>
+            </div>
+
+            {extractionNote && (
+              <p className="text-body-sm text-text-muted flex items-start gap-2" role="status">
+                <CheckCircle2 className="w-4 h-4 text-success flex-shrink-0 mt-0.5" aria-hidden="true" />
+                {extractionNote}
+              </p>
+            )}
+          </div>
+
           <Input
             label="Title"
             placeholder="e.g. TCS campus drive — shortlist"
@@ -170,29 +278,11 @@ export function MyNoticesPage() {
             {...register('description')}
           />
 
-          <div>
-            <p className="text-body-sm font-medium text-text mb-2">Attach the original PDF (optional)</p>
-            <label
-              htmlFor="personal-file"
-              className="flex items-center gap-3 p-3 border border-dashed border-border rounded-md cursor-pointer hover:border-border-strong transition-colors"
-            >
-              <Paperclip className="w-5 h-5 text-text-muted" aria-hidden="true" />
-              <span className="text-body-sm text-text-muted truncate">
-                {file ? `${file.name} · ${formatBytes(file.size)}` : 'Choose a PDF up to 5 MB'}
-              </span>
-            </label>
-            <input
-              id="personal-file"
-              type="file"
-              accept="application/pdf"
-              className="sr-only"
-              onChange={(event) => onFileChange(event.target.files?.[0] ?? null)}
-            />
-            {fileError && <p className="mt-1.5 text-body-sm text-danger" role="alert">{fileError}</p>}
-            {uploadMutation.isPending && (
-              <p className="mt-1.5 text-caption text-text-muted">Uploading PDF — {progress}%</p>
-            )}
-          </div>
+          {file && (
+            <p className="text-caption text-text-muted">
+              {uploadMutation.isPending ? `Attaching ${file.name} — ${progress}%` : `${file.name} will be attached when you save.`}
+            </p>
+          )}
 
           <div className="flex justify-end">
             <Button type="submit" loading={busy} className="h-10">

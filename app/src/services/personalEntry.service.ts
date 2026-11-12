@@ -1,5 +1,5 @@
 import api from './api';
-import type { PersonalEntry, PersonalEntryFileResult, PersonalEntryPayload } from '../types';
+import type { PersonalEntry, PersonalEntryDraft, PersonalEntryFileResult, PersonalEntryPayload } from '../types';
 
 export const personalEntryService = {
   async list(params?: { upcoming?: number; limit?: number }): Promise<PersonalEntry[]> {
@@ -20,6 +20,15 @@ export const personalEntryService = {
 
   async uploadFile(id: string, file: File, onProgress?: (progress: number) => void): Promise<PersonalEntryFileResult> {
     return api.upload<PersonalEntryFileResult>(`/me/entries/${id}/file`, file, onProgress);
+  },
+
+  // Reads a PDF (or pasted text) and returns the fields to prefill the form.
+  async extractFromFile(file: File): Promise<PersonalEntryDraft> {
+    return api.upload<PersonalEntryDraft>('/me/entries/extract', file);
+  },
+
+  async extractFromText(text: string): Promise<PersonalEntryDraft> {
+    return api.post<PersonalEntryDraft>('/me/entries/extract', { text });
   },
 
   async getFileUrl(id: string): Promise<{ signedUrl: string; expiresIn: number }> {

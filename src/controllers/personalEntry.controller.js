@@ -4,7 +4,8 @@ import {
     updatePersonalEntry as updatePersonalEntryService,
     deletePersonalEntry as deletePersonalEntryService,
     uploadPersonalEntryFile as uploadPersonalEntryFileService,
-    getPersonalEntryFileUrl as getPersonalEntryFileUrlService
+    getPersonalEntryFileUrl as getPersonalEntryFileUrlService,
+    draftPersonalEntryFromSource as draftPersonalEntryFromSourceService
 } from "../services/personalEntry.service.js";
 import { sendError } from "../utils/errors.js";
 
@@ -53,6 +54,22 @@ export const deletePersonalEntry = async (req, res) => {
 
         res.status(200).json({
             data: result
+        });
+
+    } catch (error) {
+        sendError(res, error);
+    }
+};
+
+export const extractPersonalEntryDraft = async (req, res) => {
+    try {
+        const draft = await draftPersonalEntryFromSourceService({
+            file: req.file,
+            text: req.body?.text
+        });
+
+        res.status(200).json({
+            data: draft
         });
 
     } catch (error) {

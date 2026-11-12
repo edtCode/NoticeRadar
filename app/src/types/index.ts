@@ -430,6 +430,15 @@ export interface PersonalEntryPayload {
     eventDate?: string | null;
 }
 
+export interface PersonalEntryDraft {
+    title: string;
+    description: string;
+    category: NoticeCategory;
+    deadline: string | null;
+    eventDate: string | null;
+    ambiguousFields: string[];
+}
+
 export interface PersonalEntryFileResult {
     entry: PersonalEntry;
     signedUrl: string;

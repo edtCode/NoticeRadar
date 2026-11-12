@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 import request from "supertest";
 import { buildTestApp, createUserClient, studentProfileRow, STUDENT_ID } from "./helpers/testApp.js";
 import { createMockSupabase } from "./helpers/mockSupabase.js";
+import { env } from "../config/env.js";
 
 const ENTRY_ID = "88888888-8888-4888-8888-888888888888";
 
@@ -67,6 +68,60 @@ test("a student can add their own notice or event", async () => {
     assert.equal(insertCall.payload.user_id, STUDENT_ID);
     assert.equal(insertCall.payload.title, "Google STEP internship");
     assert.equal(insertCall.payload.deadline, "2026-12-05T18:29:59.999Z");
+});
+
+test("pasted text is read into entry fields instead of being typed by the student", async () => {
+    const originalFetch = globalThis.fetch;
+    const originalKey = env.llm.apiKey;
+
+    env.llm.apiKey = "test-key";
+    globalThis.fetch = async () => ({
+        ok: true,
+        json: async () => ({
+            choices: [
+                {
+                    message: {
+                        content: JSON.stringify({
+                            title: "TCS campus drive",
+                            description: "Final-year CSE students, apply on the portal.",
+                            category: "PLACEMENT",
+                            deadline: "2026-12-10",
+                            eventDate: null,
+                            ambiguousFields: []
+                        })
+                    }
+                }
+            ]
+        })
+    });
+
+    try {
+        const { app } = buildApp();
+
+        const response = await request(app)
+            .post("/api/v1/me/entries/extract")
+            .set("Authorization", "Bearer valid-token")
+            .send({ text: "TCS campus drive for final year CSE students. Apply by 10 December 2026 on the portal." });
+
+        assert.equal(response.status, 200);
+        assert.equal(response.body.data.title, "TCS campus drive");
+        assert.equal(response.body.data.category, "PLACEMENT");
+        assert.equal(response.body.data.deadline, "2026-12-10");
+    } finally {
+        globalThis.fetch = originalFetch;
+        env.llm.apiKey = originalKey;
+    }
+});
+
+test("extraction needs either a PDF or a few lines of text", async () => {
+    const { app } = buildApp();
+
+    const response = await request(app)
+        .post("/api/v1/me/entries/extract")
+        .set("Authorization", "Bearer valid-token")
+        .send({ text: "too short" });
+
+    assert.equal(response.status, 400);
 });
 
 test("an entry without a title is rejected", async () => {
