@@ -13,6 +13,12 @@ export const env = {
     supabaseUrl: process.env.SUPABASE_URL,
     supabaseAnonKey: process.env.SUPABASE_ANON_KEY,
     supabaseServiceRoleKey: process.env.SUPABASE_SERVICE_ROLE_KEY,
+    appUrl: process.env.APP_URL || "https://notice-radar-six.vercel.app",
+    mail: {
+        apiKey: process.env.RESEND_API_KEY,
+        from: process.env.MAIL_FROM || "NoticeRadar <onboarding@resend.dev>",
+        replyTo: process.env.MAIL_REPLY_TO
+    },
     maxUploadBytes: 5 * 1024 * 1024,
     llm: {
         provider: process.env.LLM_PROVIDER || "openai",
