@@ -1,10 +1,44 @@
-import { Resend } from "resend";
 import { env } from "../config/env.js";
 
+// Resend is loaded lazily so a host that failed to install the package can
+// still boot the API; signups then fall back to Supabase's own mailer.
+let ResendClient;
 let client;
+let loadAttempted = false;
 
-const getClient = () => {
+const loadResend = async () => {
+    if (ResendClient) {
+        return ResendClient;
+    }
+
+    if (loadAttempted) {
+        return null;
+    }
+
+    loadAttempted = true;
+
+    try {
+        ({ Resend: ResendClient } = await import("resend"));
+
+        return ResendClient;
+    } catch (error) {
+        console.warn(
+            "The 'resend' package is not installed; signup emails will use Supabase's built-in mailer.",
+            error.message
+        );
+
+        return null;
+    }
+};
+
+const getClient = async () => {
     if (!env.mail.apiKey) {
+        return null;
+    }
+
+    const Resend = await loadResend();
+
+    if (!Resend) {
         return null;
     }
 
@@ -19,13 +53,13 @@ const escapeHtml = (value) => String(value ?? "")
     .replace(/>/g, "&gt;")
     .replace(/"/g, "&quot;");
 
-export const isMailEnabled = () => Boolean(env.mail.apiKey);
+export const isMailEnabled = async () => Boolean(env.mail.apiKey) && Boolean(await loadResend());
 
 export const sendMail = async ({ to, subject, html, text }) => {
-    const resend = getClient();
+    const resend = await getClient();
 
     if (!resend) {
-        throw new Error("RESEND_API_KEY is not configured");
+        throw new Error("RESEND_API_KEY is not configured, or the 'resend' package is unavailable");
     }
 
     const { data, error } = await resend.emails.send({

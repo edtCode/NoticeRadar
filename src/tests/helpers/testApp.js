@@ -1,6 +1,11 @@
 import { createApp } from "../../app.js";
 import { createMockSupabase } from "./mockSupabase.js";
 
+// The suite covers the Supabase mailer path with mocked clients, so a real
+// RESEND_API_KEY in a developer's .env must not redirect registration through
+// Resend (which would also hit the network).
+process.env.RESEND_API_KEY = "";
+
 export const STUDENT_ID = "11111111-1111-4111-8111-111111111111";
 export const ADMIN_ID = "22222222-2222-4222-8222-222222222222";
 export const INSTITUTION_ID = "33333333-3333-4333-8333-333333333333";

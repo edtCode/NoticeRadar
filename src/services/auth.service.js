@@ -165,7 +165,7 @@ const registerWithMailer = async (adminClient, { name, email, password }) => {
 export const registerUser = async ({ publicClient, adminClient }, payload) => {
     const { name, email, password } = payload;
 
-    if (isMailEnabled()) {
+    if (await isMailEnabled()) {
         return registerWithMailer(adminClient, { name, email, password });
     }
 

@@ -15,7 +15,10 @@ export const env = {
     supabaseServiceRoleKey: process.env.SUPABASE_SERVICE_ROLE_KEY,
     appUrl: process.env.APP_URL || "https://notice-radar-six.vercel.app",
     mail: {
-        apiKey: process.env.RESEND_API_KEY,
+        // Read live so tests can opt out of Resend without reloading config.
+        get apiKey() {
+            return process.env.RESEND_API_KEY;
+        },
         from: process.env.MAIL_FROM || "NoticeRadar <onboarding@resend.dev>",
         replyTo: process.env.MAIL_REPLY_TO
     },
