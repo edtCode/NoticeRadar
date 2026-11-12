@@ -157,10 +157,79 @@ test("pasted text is read into entry fields instead of being typed by the studen
         assert.equal(response.body.data.title, "TCS campus drive");
         assert.equal(response.body.data.category, "PLACEMENT");
         assert.equal(response.body.data.deadline, "2026-12-10");
+        // No stored profile in this fixture, so the verdict asks for one.
+        assert.equal(response.body.data.eligibility.status, "POSSIBLY_ELIGIBLE");
+        assert.match(response.body.data.eligibility.reasons[0], /profile/i);
     } finally {
         globalThis.fetch = originalFetch;
         env.llm.apiKey = originalKey;
     }
+});
+
+test("extraction answers whether the student is eligible before they save", async () => {
+    const originalFetch = globalThis.fetch;
+    const originalKey = env.llm.apiKey;
+
+    env.llm.apiKey = "test-key";
+    globalThis.fetch = async () => ({
+        ok: true,
+        json: async () => ({
+            choices: [
+                {
+                    message: {
+                        content: JSON.stringify({
+                            title: "TCS Digital drive",
+                            description: "For CSE and IT students with a CPI of 7.0.",
+                            category: "PLACEMENT",
+                            deadline: "2026-12-10",
+                            eventDate: null,
+                            eligibleBranches: ["CSE"],
+                            minimumCPI: 7,
+                            requiresNoBacklogs: true,
+                            ambiguousFields: []
+                        })
+                    }
+                }
+            ]
+        })
+    });
+
+    try {
+        const { app } = buildApp({
+            student_profiles: {
+                select: { data: { branch: "Information Technology", semester: 6, cpi: 7.8, graduation_year: 2027, active_backlogs: 0 } }
+            }
+        });
+
+        const response = await request(app)
+            .post("/api/v1/me/entries/extract")
+            .set("Authorization", "Bearer valid-token")
+            .send({ text: "TCS Digital drive for CSE students with CPI 7.0 and no active backlogs. Apply by 10 December 2026." });
+
+        assert.equal(response.status, 200);
+        assert.equal(response.body.data.eligibility.status, "NOT_ELIGIBLE");
+        assert.match(response.body.data.eligibility.reasons[0], /Branch Information Technology/);
+    } finally {
+        globalThis.fetch = originalFetch;
+        env.llm.apiKey = originalKey;
+    }
+});
+
+test("eligibility can be re-checked for edited criteria before saving", async () => {
+    const { app } = buildApp({
+        student_profiles: {
+            select: { data: { branch: "Computer Science", semester: 6, cpi: 7.2, graduation_year: 2027, active_backlogs: 0 } }
+        }
+    });
+
+    const response = await request(app)
+        .post("/api/v1/me/entries/eligibility")
+        .set("Authorization", "Bearer valid-token")
+        .send({ eligibleBranches: ["Computer Science"], minimumCPI: 8.5, requiresNoBacklogs: true });
+
+    assert.equal(response.status, 200);
+    assert.equal(response.body.data.status, "NOT_ELIGIBLE");
+    assert.match(response.body.data.reasons[0], /CPI 7.2/);
 });
 
 test("extraction needs either a PDF or a few lines of text", async () => {

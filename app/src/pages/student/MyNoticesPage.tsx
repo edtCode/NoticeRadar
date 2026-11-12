@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -6,6 +6,7 @@ import { AlertTriangle, CalendarPlus, CheckCircle2, FileText, Inbox, Loader2, Pa
 import { PageHeader } from '../../components/common/PageHeader';
 import { Input, Textarea, Select } from '../../components/ui/Input';
 import { Button, CategoryBadge, ErrorState, StatusBadge } from '../../components/ui';
+import { EligibilityReasons } from '../../components/notices';
 import { useAddToast } from '../../stores/uiStore';
 import {
   usePersonalEntries,
@@ -13,12 +14,13 @@ import {
   useDeletePersonalEntry,
   useUploadPersonalEntryFile,
   useExtractPersonalEntryDraft,
+  usePreviewPersonalEntryEligibility,
 } from '../../hooks/usePersonalEntryService';
 import personalEntryService from '../../services/personalEntry.service';
 import { NOTICE_CATEGORIES, NOTICE_CATEGORY_LABELS, FILE_UPLOAD } from '../../constants';
 import { formatDate, daysUntil } from '../../utils/helpers';
 import { formatBytes } from '../../utils/format';
-import type { NoticeCategory, PersonalEntry, PersonalEntryDraft } from '../../types';
+import type { Eligibility, NoticeCategory, PersonalEntry, PersonalEntryDraft } from '../../types';
 
 const entrySchema = z.object({
   title: z.string().trim().min(1, 'Give this notice a title').max(200, 'Title is too long'),
@@ -56,6 +58,7 @@ export function MyNoticesPage() {
   const uploadMutation = useUploadPersonalEntryFile();
   const deleteMutation = useDeletePersonalEntry();
   const extractMutation = useExtractPersonalEntryDraft();
+  const previewMutation = usePreviewPersonalEntryEligibility();
 
   const [file, setFile] = useState<File | null>(null);
   const [fileError, setFileError] = useState<string | null>(null);
@@ -63,12 +66,15 @@ export function MyNoticesPage() {
   const [confirmingId, setConfirmingId] = useState<string | null>(null);
   const [pastedText, setPastedText] = useState('');
   const [extractionNote, setExtractionNote] = useState<string | null>(null);
+  const [eligibility, setEligibility] = useState<Eligibility | null>(null);
+  const [eligibilityChecked, setEligibilityChecked] = useState(false);
 
   const {
     register,
     handleSubmit,
     reset,
     setValue,
+    watch,
     formState: { errors },
   } = useForm<EntryForm>({
     resolver: zodResolver(entrySchema),
@@ -94,6 +100,9 @@ export function MyNoticesPage() {
     setValue('minimumCPI', draft.minimumCPI === null ? '' : String(draft.minimumCPI), { shouldDirty: true });
     setValue('requiresNoBacklogs', draft.requiresNoBacklogs === true, { shouldDirty: true });
 
+    setEligibility(draft.eligibility ?? null);
+    setEligibilityChecked(true);
+
     const unclear = draft.ambiguousFields.join(', ');
     setExtractionNote(
       draft.ambiguousFields.length
@@ -104,6 +113,8 @@ export function MyNoticesPage() {
 
   const runExtraction = async (source: { file: File } | { text: string }) => {
     setExtractionNote(null);
+    setEligibility(null);
+    setEligibilityChecked(false);
     try {
       const draft = await extractMutation.mutateAsync(source);
       applyDraft(draft);
@@ -120,6 +131,8 @@ export function MyNoticesPage() {
     setFileError(null);
     setProgress(0);
     setExtractionNote(null);
+    setEligibility(null);
+    setEligibilityChecked(false);
     if (!selected) {
       setFile(null);
       return;
@@ -167,6 +180,8 @@ export function MyNoticesPage() {
       onFileChange(null);
       setPastedText('');
       setExtractionNote(null);
+      setEligibility(null);
+      setEligibilityChecked(false);
       addToast({ type: 'success', title: 'Added to your radar', message: 'It now appears in your tracked notices and deadlines.' });
     } catch (error) {
       addToast({
@@ -189,6 +204,32 @@ export function MyNoticesPage() {
       });
     }
   };
+
+  // Keep the verdict honest while the student corrects the criteria the
+  // extractor filled in.
+  const [branchesValue, minimumCPIValue, requiresNoBacklogsValue] = watch([
+    'branches',
+    'minimumCPI',
+    'requiresNoBacklogs',
+  ]);
+
+  useEffect(() => {
+    if (!eligibilityChecked) return;
+
+    const timer = setTimeout(() => {
+      previewMutation.mutate(
+        {
+          eligibleBranches: parseBranches(branchesValue),
+          minimumCPI: minimumCPIValue ? Number(minimumCPIValue) : null,
+          requiresNoBacklogs: requiresNoBacklogsValue === true,
+        },
+        { onSuccess: (result) => setEligibility(result) }
+      );
+    }, 500);
+
+    return () => clearTimeout(timer);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [branchesValue, minimumCPIValue, requiresNoBacklogsValue, eligibilityChecked]);
 
   const entries = entriesQuery.data ?? [];
   const busy = createMutation.isPending || uploadMutation.isPending || extractMutation.isPending;
@@ -272,6 +313,17 @@ export function MyNoticesPage() {
               </p>
             )}
           </div>
+
+          {eligibility && (
+            <div className="rounded-md border border-border bg-bg p-4 space-y-2" aria-live="polite">
+              <p className="text-body-sm font-medium text-text">Are you eligible?</p>
+              <EligibilityReasons eligibility={eligibility} compact />
+              <p className="text-caption text-text-muted">
+                Based on the requirements read from this notice and the profile you set up. If the details above are wrong,
+                correct them and this answer updates.
+              </p>
+            </div>
+          )}
 
           <Input
             label="Title"

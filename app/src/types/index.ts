@@ -447,6 +447,8 @@ export interface PersonalEntryDraft {
     minimumCPI: number | null;
     requiresNoBacklogs: boolean | null;
     ambiguousFields: string[];
+    // Verdict computed from the extracted requirements and the student's profile.
+    eligibility?: Eligibility;
 }
 
 export interface PersonalEntryFileResult {

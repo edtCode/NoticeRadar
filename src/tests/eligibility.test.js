@@ -37,6 +37,20 @@ test("branch matching ignores case and punctuation", () => {
     assert.equal(result.status, "ELIGIBLE");
 });
 
+test("branch abbreviations match the full branch name", () => {
+    const computerScience = checkEligibility(student, {
+        eligible_branches: ["CSE"],
+        requires_no_backlogs: null
+    });
+    const informationTechnology = checkEligibility({ ...student, branch: "Information Technology" }, {
+        eligible_branches: ["IT"],
+        requires_no_backlogs: null
+    });
+
+    assert.equal(computerScience.status, "ELIGIBLE");
+    assert.equal(informationTechnology.status, "ELIGIBLE");
+});
+
 test("a clear restriction failure is NOT_ELIGIBLE and beats missing data", () => {
     const result = checkEligibility(
         { ...student, cpi: null },

@@ -5,7 +5,8 @@ import {
     deletePersonalEntry as deletePersonalEntryService,
     uploadPersonalEntryFile as uploadPersonalEntryFileService,
     getPersonalEntryFileUrl as getPersonalEntryFileUrlService,
-    draftPersonalEntryFromSource as draftPersonalEntryFromSourceService
+    draftPersonalEntryFromSource as draftPersonalEntryFromSourceService,
+    previewPersonalEntryEligibility as previewPersonalEntryEligibilityService
 } from "../services/personalEntry.service.js";
 import { sendError } from "../utils/errors.js";
 
@@ -65,11 +66,26 @@ export const extractPersonalEntryDraft = async (req, res) => {
     try {
         const draft = await draftPersonalEntryFromSourceService({
             file: req.file,
-            text: req.body?.text
+            text: req.body?.text,
+            supabase: req.supabase,
+            userId: req.user.id
         });
 
         res.status(200).json({
             data: draft
+        });
+
+    } catch (error) {
+        sendError(res, error);
+    }
+};
+
+export const previewPersonalEntryEligibility = async (req, res) => {
+    try {
+        const eligibility = await previewPersonalEntryEligibilityService(req.supabase, req.user.id, req.body);
+
+        res.status(200).json({
+            data: eligibility
         });
 
     } catch (error) {

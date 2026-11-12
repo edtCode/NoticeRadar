@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import personalEntryService from '../services/personalEntry.service';
-import type { PersonalEntry, PersonalEntryDraft, PersonalEntryPayload } from '../types';
+import personalEntryService, { type PersonalEntryCriteria } from '../services/personalEntry.service';
+import type { Eligibility, PersonalEntry, PersonalEntryDraft, PersonalEntryPayload } from '../types';
 
 const ENTRIES_KEY = ['personal-entries'] as const;
 
@@ -50,6 +50,12 @@ export function useExtractPersonalEntryDraft() {
   return useMutation<PersonalEntryDraft, Error, { file: File } | { text: string }>({
     mutationFn: (source) =>
       'file' in source ? personalEntryService.extractFromFile(source.file) : personalEntryService.extractFromText(source.text),
+  });
+}
+
+export function usePreviewPersonalEntryEligibility() {
+  return useMutation<Eligibility, Error, PersonalEntryCriteria>({
+    mutationFn: (criteria) => personalEntryService.previewEligibility(criteria),
   });
 }
 

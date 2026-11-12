@@ -1,5 +1,11 @@
 import api from './api';
-import type { PersonalEntry, PersonalEntryDraft, PersonalEntryFileResult, PersonalEntryPayload } from '../types';
+import type { Eligibility, PersonalEntry, PersonalEntryDraft, PersonalEntryFileResult, PersonalEntryPayload } from '../types';
+
+export type PersonalEntryCriteria = {
+  eligibleBranches: string[];
+  minimumCPI: number | null;
+  requiresNoBacklogs: boolean;
+};
 
 export const personalEntryService = {
   async list(params?: { upcoming?: number; limit?: number }): Promise<PersonalEntry[]> {
@@ -29,6 +35,11 @@ export const personalEntryService = {
 
   async extractFromText(text: string): Promise<PersonalEntryDraft> {
     return api.post<PersonalEntryDraft>('/me/entries/extract', { text });
+  },
+
+  // Re-checks eligibility for criteria the student edited after extraction.
+  async previewEligibility(criteria: PersonalEntryCriteria): Promise<Eligibility> {
+    return api.post<Eligibility>('/me/entries/eligibility', criteria);
   },
 
   async getFileUrl(id: string): Promise<{ signedUrl: string; expiresIn: number }> {

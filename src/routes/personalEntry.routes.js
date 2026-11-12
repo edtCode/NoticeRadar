@@ -6,7 +6,8 @@ import {
     deletePersonalEntry,
     uploadPersonalEntryFile,
     getPersonalEntryFile,
-    extractPersonalEntryDraft
+    extractPersonalEntryDraft,
+    previewPersonalEntryEligibility
 } from "../controllers/personalEntry.controller.js";
 import { authenticate } from "../middlewares/auth.middleware.js";
 import { validate, validateIdParam } from "../middlewares/validate.middleware.js";
@@ -15,7 +16,8 @@ import {
     personalEntrySchema,
     personalEntryUpdateSchema,
     personalEntryQuerySchema,
-    personalEntryTextSchema
+    personalEntryTextSchema,
+    personalEntryCriteriaSchema
 } from "../validators/personalEntry.validator.js";
 
 const router = Router();
@@ -32,6 +34,8 @@ router.post(
     (req, res, next) => (req.file ? next() : validate(personalEntryTextSchema)(req, res, next)),
     extractPersonalEntryDraft
 );
+// Re-checks eligibility for criteria the student edits in the form.
+router.post("/eligibility", validate(personalEntryCriteriaSchema), previewPersonalEntryEligibility);
 router.post("/:id/file", validateIdParam, uploadNoticePdf, uploadPersonalEntryFile);
 router.get("/:id/file", validateIdParam, getPersonalEntryFile);
 router.patch("/:id", validateIdParam, validate(personalEntryUpdateSchema), updatePersonalEntry);

@@ -107,19 +107,20 @@ const getEligibilityStudent = async (supabase, userId) => {
     };
 };
 
-const withEligibility = (entry, student) => {
+const eligibilityFor = (criteria, student) => {
     if (!student) {
         return {
-            ...entry,
-            eligibility: {
-                status: "POSSIBLY_ELIGIBLE",
-                reasons: ["Complete your student profile to check eligibility"],
-                missingFields: ["studentProfile"]
-            }
+            status: "POSSIBLY_ELIGIBLE",
+            reasons: ["Complete your student profile to check eligibility"],
+            missingFields: ["studentProfile"]
         };
     }
 
-    return { ...entry, eligibility: checkEligibility(student, entry) };
+    return checkEligibility(student, criteria);
+};
+
+const withEligibility = (entry, student) => {
+    return { ...entry, eligibility: eligibilityFor(entry, student) };
 };
 
 export const listPersonalEntries = async (supabase, userId, { upcoming, limit }) => {
@@ -156,7 +157,7 @@ export const listPersonalEntries = async (supabase, userId, { upcoming, limit })
 
 // Reads the uploaded PDF (or the pasted text) and returns the form fields, so
 // the student only reviews and saves instead of typing everything by hand.
-export const draftPersonalEntryFromSource = async ({ file, text }) => {
+export const draftPersonalEntryFromSource = async ({ file, text, supabase, userId }) => {
     let pages;
 
     if (file) {
@@ -187,6 +188,18 @@ export const draftPersonalEntryFromSource = async ({ file, text }) => {
 
     const extraction = await extractPersonalEntryFromText(pages);
 
+    // Answer "am I eligible?" straight away, using the requirements read from
+    // this notice and the student's saved profile.
+    const student = supabase && userId ? await getEligibilityStudent(supabase, userId) : null;
+    const eligibility = eligibilityFor(
+        {
+            eligible_branches: extraction.eligibleBranches ?? [],
+            minimum_cpi: extraction.minimumCPI ?? null,
+            requires_no_backlogs: extraction.requiresNoBacklogs ?? null
+        },
+        student
+    );
+
     return {
         title: extraction.title ?? "",
         description: extraction.description ?? "",
@@ -196,8 +209,24 @@ export const draftPersonalEntryFromSource = async ({ file, text }) => {
         eligibleBranches: extraction.eligibleBranches,
         minimumCPI: extraction.minimumCPI,
         requiresNoBacklogs: extraction.requiresNoBacklogs,
-        ambiguousFields: extraction.ambiguousFields
+        ambiguousFields: extraction.ambiguousFields,
+        eligibility
     };
+};
+
+// Used while the student edits the criteria the extractor filled in, so the
+// verdict stays accurate without saving the entry first.
+export const previewPersonalEntryEligibility = async (supabase, userId, { eligibleBranches, minimumCPI, requiresNoBacklogs }) => {
+    const student = await getEligibilityStudent(supabase, userId);
+
+    return eligibilityFor(
+        {
+            eligible_branches: eligibleBranches ?? [],
+            minimum_cpi: minimumCPI ?? null,
+            requires_no_backlogs: requiresNoBacklogs ?? null
+        },
+        student
+    );
 };
 
 export const createPersonalEntry = async (supabase, userId, payload) => {

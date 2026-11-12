@@ -1,5 +1,22 @@
+// Notices use abbreviations (CSE, IT) while profiles store full branch names,
+// so both sides are mapped to the same canonical form before comparing.
+const BRANCH_ALIASES = {
+    cse: "computerscience",
+    cs: "computerscience",
+    compsci: "computerscience",
+    it: "informationtechnology",
+    ece: "electronicsandcommunication",
+    eee: "electricalandelectronics",
+    ee: "electricalandelectronics",
+    mech: "mechanical",
+    me: "mechanical",
+    biotech: "biotechnology"
+};
+
 const normalizeBranch = (value) => {
-    return String(value ?? "").trim().toLowerCase().replace(/[^a-z0-9]/g, "");
+    const normalized = String(value ?? "").trim().toLowerCase().replace(/[^a-z0-9]/g, "");
+
+    return BRANCH_ALIASES[normalized] ?? normalized;
 };
 
 const isSpecified = (value) => value !== null && value !== undefined;

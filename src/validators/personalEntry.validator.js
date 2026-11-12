@@ -24,6 +24,13 @@ export const personalEntryTextSchema = z.object({
     text: z.string().trim().min(20, "Paste a few lines of the notice text").max(20000, "The pasted text is too long")
 });
 
+// Criteria only, so the form can re-check eligibility before saving.
+export const personalEntryCriteriaSchema = z.object({
+    eligibleBranches: z.array(z.string().trim().min(1).max(100)).max(50).optional(),
+    minimumCPI: z.coerce.number().min(0).max(10).nullable().optional(),
+    requiresNoBacklogs: z.boolean().nullable().optional()
+});
+
 export const personalEntryQuerySchema = z.object({
     upcoming: z.coerce.number().int().min(1).max(365).optional(),
     limit: z.coerce.number().int().min(1).max(100).default(50)
