@@ -101,6 +101,9 @@ test("personal entry extraction keeps only the fields the student edits", async 
         category: "placement",
         deadline: "2026-12-10",
         eventDate: "2026-12-15",
+        eligibleBranches: ["CSE", "IT"],
+        minimumCPI: 7,
+        requiresNoBacklogs: true,
         ambiguousFields: [],
         evidence: [{ field: "deadline", pageNumber: 1, text: "10 December 2026" }]
     };
@@ -117,6 +120,9 @@ test("personal entry extraction keeps only the fields the student edits", async 
     assert.equal(result.category, "PLACEMENT");
     assert.equal(result.deadline, "2026-12-10");
     assert.equal(result.eventDate, "2026-12-15");
+    assert.deepEqual(result.eligibleBranches, ["CSE", "IT"]);
+    assert.equal(result.minimumCPI, 7);
+    assert.equal(result.requiresNoBacklogs, true);
     assert.match(requestBody.messages[0].content, /eventDate/);
 });
 

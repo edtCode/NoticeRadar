@@ -5,6 +5,7 @@ import { PERSONAL_FILES_BUCKET } from "../utils/constants.js";
 import { isPdf } from "./storage.service.js";
 import { extractTextFromPdf } from "./pdf.service.js";
 import { extractPersonalEntryFromText } from "./ai.service.js";
+import { checkEligibility } from "./eligibility.service.js";
 
 const SIGNED_URL_TTL = 600;
 const MINIMUM_TEXT_LENGTH = 20;
@@ -21,6 +22,9 @@ const ENTRY_COLUMNS = `
     source_email,
     file_name,
     file_size,
+    eligible_branches,
+    minimum_cpi,
+    requires_no_backlogs,
     created_at,
     updated_at
 `;
@@ -37,7 +41,10 @@ const toRow = (payload) => {
             category: payload.category,
             deadline: payload.deadline,
             event_date: payload.eventDate,
-            source: payload.source
+            source: payload.source,
+            eligible_branches: payload.eligibleBranches,
+            minimum_cpi: payload.minimumCPI,
+            requires_no_backlogs: payload.requiresNoBacklogs
         }).filter(([, value]) => value !== undefined)
     );
 };
@@ -74,6 +81,47 @@ const getOwnedEntry = async (supabase, userId, entryId) => {
     return data;
 };
 
+// The same rules the institution feed uses, applied to the student's own entries
+// so a private internship or event still tells them whether they qualify.
+const getEligibilityStudent = async (supabase, userId) => {
+    const { data, error } = await supabase
+        .from("student_profiles")
+        .select("branch, semester, cpi, graduation_year, active_backlogs")
+        .eq("user_id", userId)
+        .maybeSingle();
+
+    if (error) {
+        throw databaseError(error);
+    }
+
+    if (!data) {
+        return null;
+    }
+
+    return {
+        branch: data.branch,
+        semester: data.semester,
+        cpi: data.cpi,
+        graduationYear: data.graduation_year,
+        activeBacklogs: data.active_backlogs
+    };
+};
+
+const withEligibility = (entry, student) => {
+    if (!student) {
+        return {
+            ...entry,
+            eligibility: {
+                status: "POSSIBLY_ELIGIBLE",
+                reasons: ["Complete your student profile to check eligibility"],
+                missingFields: ["studentProfile"]
+            }
+        };
+    }
+
+    return { ...entry, eligibility: checkEligibility(student, entry) };
+};
+
 export const listPersonalEntries = async (supabase, userId, { upcoming, limit }) => {
     let query = supabase
         .from("personal_entries")
@@ -95,7 +143,15 @@ export const listPersonalEntries = async (supabase, userId, { upcoming, limit })
         throw databaseError(error);
     }
 
-    return data ?? [];
+    const entries = data ?? [];
+
+    if (entries.length === 0) {
+        return entries;
+    }
+
+    const student = await getEligibilityStudent(supabase, userId);
+
+    return entries.map((entry) => withEligibility(entry, student));
 };
 
 // Reads the uploaded PDF (or the pasted text) and returns the form fields, so
@@ -137,6 +193,9 @@ export const draftPersonalEntryFromSource = async ({ file, text }) => {
         category: extraction.category ?? "GENERAL",
         deadline: extraction.deadline,
         eventDate: extraction.eventDate,
+        eligibleBranches: extraction.eligibleBranches,
+        minimumCPI: extraction.minimumCPI,
+        requiresNoBacklogs: extraction.requiresNoBacklogs,
         ambiguousFields: extraction.ambiguousFields
     };
 };

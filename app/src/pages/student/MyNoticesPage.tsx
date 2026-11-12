@@ -5,7 +5,7 @@ import { z } from 'zod';
 import { AlertTriangle, CalendarPlus, CheckCircle2, FileText, Inbox, Loader2, Paperclip, Sparkles, Trash2, Upload } from 'lucide-react';
 import { PageHeader } from '../../components/common/PageHeader';
 import { Input, Textarea, Select } from '../../components/ui/Input';
-import { Button, CategoryBadge, ErrorState } from '../../components/ui';
+import { Button, CategoryBadge, ErrorState, StatusBadge } from '../../components/ui';
 import { useAddToast } from '../../stores/uiStore';
 import {
   usePersonalEntries,
@@ -26,9 +26,18 @@ const entrySchema = z.object({
   category: z.enum(NOTICE_CATEGORIES),
   deadline: z.string().optional(),
   eventDate: z.string().optional(),
+  branches: z.string().optional(),
+  minimumCPI: z.string().optional(),
+  requiresNoBacklogs: z.boolean().optional(),
 });
 
 type EntryForm = z.infer<typeof entrySchema>;
+
+const parseBranches = (value?: string) =>
+  (value ?? '')
+    .split(',')
+    .map((branch) => branch.trim())
+    .filter(Boolean);
 
 const toIso = (value?: string) => {
   if (!value) return null;
@@ -63,7 +72,16 @@ export function MyNoticesPage() {
     formState: { errors },
   } = useForm<EntryForm>({
     resolver: zodResolver(entrySchema),
-    defaultValues: { title: '', description: '', category: 'GENERAL', deadline: '', eventDate: '' },
+    defaultValues: {
+      title: '',
+      description: '',
+      category: 'GENERAL',
+      deadline: '',
+      eventDate: '',
+      branches: '',
+      minimumCPI: '',
+      requiresNoBacklogs: false,
+    },
   });
 
   const applyDraft = (draft: PersonalEntryDraft) => {
@@ -72,6 +90,9 @@ export function MyNoticesPage() {
     setValue('category', draft.category, { shouldDirty: true });
     setValue('deadline', toDateTimeInput(draft.deadline, '23:59'), { shouldDirty: true });
     setValue('eventDate', toDateTimeInput(draft.eventDate, '09:00'), { shouldDirty: true });
+    setValue('branches', draft.eligibleBranches.join(', '), { shouldDirty: true });
+    setValue('minimumCPI', draft.minimumCPI === null ? '' : String(draft.minimumCPI), { shouldDirty: true });
+    setValue('requiresNoBacklogs', draft.requiresNoBacklogs === true, { shouldDirty: true });
 
     const unclear = draft.ambiguousFields.join(', ');
     setExtractionNote(
@@ -125,6 +146,9 @@ export function MyNoticesPage() {
         category: data.category as NoticeCategory,
         deadline: toIso(data.deadline),
         eventDate: toIso(data.eventDate),
+        eligibleBranches: parseBranches(data.branches),
+        minimumCPI: data.minimumCPI ? Number(data.minimumCPI) : null,
+        requiresNoBacklogs: data.requiresNoBacklogs ? true : null,
       });
 
       if (file) {
@@ -278,6 +302,35 @@ export function MyNoticesPage() {
             {...register('description')}
           />
 
+          <fieldset className="rounded-md border border-border p-4">
+            <legend className="px-1 text-body-sm font-medium text-text">Who can apply (optional)</legend>
+            <p className="text-caption text-text-muted mb-3">
+              Filled from your document when it states them — this is what decides your eligible / not eligible badge.
+            </p>
+            <div className="grid sm:grid-cols-2 gap-4">
+              <Input
+                label="Eligible branches"
+                placeholder="CSE, IT — leave empty for all branches"
+                error={errors.branches?.message}
+                {...register('branches')}
+              />
+              <Input
+                label="Minimum CPI"
+                type="number"
+                step="0.1"
+                min="0"
+                max="10"
+                placeholder="e.g. 7.0"
+                error={errors.minimumCPI?.message}
+                {...register('minimumCPI')}
+              />
+            </div>
+            <label className="mt-3 flex items-center gap-2 text-body-sm text-text">
+              <input type="checkbox" className="h-4 w-4" {...register('requiresNoBacklogs')} />
+              No active backlogs allowed
+            </label>
+          </fieldset>
+
           {file && (
             <p className="text-caption text-text-muted">
               {uploadMutation.isPending ? `Attaching ${file.name} — ${progress}%` : `${file.name} will be attached when you save.`}
@@ -330,6 +383,9 @@ export function MyNoticesPage() {
                     <div className="flex flex-wrap items-center gap-2">
                       <p className="text-body font-medium text-text">{entry.title}</p>
                       <CategoryBadge category={entry.category} size="sm" dot={false} />
+                      {entry.eligibility && (
+                        <StatusBadge status={entry.eligibility.status} type="eligibility" size="sm" />
+                      )}
                       {entry.source !== 'MANUAL' && (
                         <span className="text-caption px-2 py-0.5 rounded-full bg-info-soft text-info">
                           {entry.source === 'UPLOAD' ? 'From PDF' : 'From email'}
@@ -342,6 +398,9 @@ export function MyNoticesPage() {
                       {entry.event_date && ` · Event ${formatDate(entry.event_date)}`}
                     </p>
                     {entry.description && <p className="text-body-sm text-text-muted mt-1 line-clamp-2">{entry.description}</p>}
+                    {entry.eligibility?.status === 'NOT_ELIGIBLE' && entry.eligibility.reasons.length > 0 && (
+                      <p className="text-caption text-danger mt-1">{entry.eligibility.reasons[0]}</p>
+                    )}
                   </div>
 
                   <div className="flex items-center gap-2 flex-shrink-0">

@@ -38,6 +38,9 @@ export const personalExtractionSchema = z.object({
     category: z.enum(NOTICE_CATEGORIES).nullable(),
     deadline: dateOnly.nullable(),
     eventDate: dateOnly.nullable(),
+    eligibleBranches: z.array(z.string().trim().min(1).max(100)).max(50).default([]),
+    minimumCPI: z.coerce.number().min(0).max(10).nullable().default(null),
+    requiresNoBacklogs: z.boolean().nullable().default(null),
     ambiguousFields: z.array(z.string().trim().min(1).max(100)).max(30).default([])
 });
 

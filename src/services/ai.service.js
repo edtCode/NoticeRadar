@@ -34,9 +34,12 @@ Rules:
 - description: 1-3 sentences covering eligibility, venue, links or anything else the student would want to remember.
 - category must be one of: PLACEMENT, INTERNSHIP, SCHOLARSHIP, EXAM, EVENT, GENERAL.
 - deadline and eventDate must be YYYY-MM-DD or null. If a date has no year, return null and add the field name to ambiguousFields.
+- eligibleBranches: branch names the notice restricts to (e.g. ["CSE", "IT"]). Use [] when all branches may apply or the text does not restrict branches.
+- minimumCPI: the minimum CPI the notice asks for, as a number, or null when it states none.
+- requiresNoBacklogs: true only when the text says students must have no active backlogs, otherwise null.
 - Use null for anything the text does not state, and [] for ambiguousFields when nothing is unclear.
 - Respond with a single JSON object only, with these keys:
-  title, description, category, deadline, eventDate, ambiguousFields.
+  title, description, category, deadline, eventDate, eligibleBranches, minimumCPI, requiresNoBacklogs, ambiguousFields.
 `;
 
 const getConfig = () => {

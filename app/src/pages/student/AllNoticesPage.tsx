@@ -5,7 +5,9 @@ import { Search, SlidersHorizontal, LayoutGrid, List, AlertTriangle, Inbox, X } 
 import { noticeService } from '../../services/notice.service';
 import { useSavedNotices, useSaveNotice, useUnsaveNotice } from '../../hooks/useNoticeService';
 import { NoticeCard } from '../../components/notices/NoticeCard';
-import { Pagination, ErrorState, EmptyState, NoticeCardSkeleton, TableSkeleton, Button } from '../../components/ui';
+import { PersonalEntryCard } from '../../components/notices/PersonalEntryCard';
+import { usePersonalEntries } from '../../hooks/usePersonalEntryService';
+import { Pagination, ErrorState, EmptyState, NoticeCardSkeleton, TableSkeleton, Button, Badge, CategoryBadge, StatusBadge } from '../../components/ui';
 import { useAddToast } from '../../stores/uiStore';
 import { useDebouncedValue } from '../../hooks/useDebounce';
 import { NOTICE_CATEGORIES, NOTICE_CATEGORY_LABELS, PAGINATION } from '../../constants';
@@ -46,6 +48,7 @@ export function AllNoticesPage() {
   const saveMutation = useSaveNotice();
   const unsaveMutation = useUnsaveNotice();
   const savedQuery = useSavedNotices({ page: 1, limit: 50 });
+  const ownEntriesQuery = usePersonalEntries({ limit: 50 });
   const savedIds = useMemo(() => new Set(savedQuery.data?.data.map((r) => r.notice_id) ?? []), [savedQuery.data]);
 
   useEffect(() => { setPage(1); }, [tab, search, category, publishedFrom, deadlineFrom, sort]);
@@ -80,6 +83,20 @@ export function AllNoticesPage() {
     if (savedIds.has(id)) unsaveMutation.mutate(id);
     else saveMutation.mutate(id, { onError: () => addToast({ type: 'error', title: 'Could not save notice' }) });
   };
+
+  // The student's own entries live in My Notices; showing them here too means
+  // "All Notices" really is everything they track, eligibility included.
+  const ownEntries = ownEntriesQuery.data ?? [];
+  const showOwnEntries = tab === 'all';
+  const ownEntriesFiltered = useMemo(() => {
+    if (!showOwnEntries) return [];
+    return ownEntries.filter((entry) => {
+      if (search && !`${entry.title} ${entry.description ?? ''}`.toLowerCase().includes(search.toLowerCase())) return false;
+      if (category && entry.category !== category) return false;
+      if (deadlineFrom && (!entry.deadline || entry.deadline.slice(0, 10) < deadlineFrom)) return false;
+      return true;
+    });
+  }, [showOwnEntries, ownEntries, search, category, deadlineFrom]);
 
   const activeFilterCount = [category, publishedFrom, deadlineFrom].filter(Boolean).length;
 
@@ -219,7 +236,7 @@ export function AllNoticesPage() {
         ) : (
           <TableSkeleton rows={5} columns={3} />
         )
-      ) : filteredNotices.length === 0 ? (
+      ) : filteredNotices.length === 0 && ownEntriesFiltered.length === 0 ? (
         <EmptyState
           icon={<Inbox className="w-12 h-12" />}
           title={isSavedTab ? "You haven't saved any notices yet" : 'No notices found'}
@@ -227,21 +244,57 @@ export function AllNoticesPage() {
           action={isSavedTab ? { label: 'Explore Notices', onClick: () => setTab('all') } : undefined}
         />
       ) : view === 'grid' ? (
-        <div className="grid md:grid-cols-2 xl:grid-cols-3 gap-4 stagger">
-          {filteredNotices.map((notice) => (
-            <NoticeCard
-              key={`${notice.id}-${isSavedTab}`}
-              notice={notice}
-              saved={savedIds.has(notice.id)}
-              onSave={handleSave}
-              onUnsave={handleSave}
-              savePending={saveMutation.isPending || unsaveMutation.isPending}
-              showEligibility={!isSavedTab}
-            />
-          ))}
+        <div className="space-y-6">
+          {ownEntriesFiltered.length > 0 && (
+            <section aria-labelledby="own-entries-heading">
+              <h2 id="own-entries-heading" className="text-body-sm font-medium text-text-muted mb-2">Added by you</h2>
+              <div className="grid md:grid-cols-2 xl:grid-cols-3 gap-4 stagger">
+                {ownEntriesFiltered.map((entry) => (
+                  <PersonalEntryCard key={entry.id} entry={entry} />
+                ))}
+              </div>
+            </section>
+          )}
+
+          {filteredNotices.length > 0 && (
+            <section aria-labelledby="institution-entries-heading">
+              {ownEntriesFiltered.length > 0 && (
+                <h2 id="institution-entries-heading" className="text-body-sm font-medium text-text-muted mb-2">From your institution</h2>
+              )}
+              <div className="grid md:grid-cols-2 xl:grid-cols-3 gap-4 stagger">
+                {filteredNotices.map((notice) => (
+                  <NoticeCard
+                    key={`${notice.id}-${isSavedTab}`}
+                    notice={notice}
+                    saved={savedIds.has(notice.id)}
+                    onSave={handleSave}
+                    onUnsave={handleSave}
+                    savePending={saveMutation.isPending || unsaveMutation.isPending}
+                    showEligibility={!isSavedTab}
+                  />
+                ))}
+              </div>
+            </section>
+          )}
         </div>
       ) : (
         <ul className="bg-bg-elevated border border-border rounded-lg divide-y divide-border">
+          {ownEntriesFiltered.map((entry) => (
+            <li key={`own-${entry.id}`} className="p-4 flex items-center justify-between gap-3">
+              <div className="min-w-0">
+                <div className="flex flex-wrap items-center gap-2">
+                  <p className="text-body font-medium text-text">{entry.title}</p>
+                  <CategoryBadge category={entry.category} size="sm" dot={false} />
+                  {entry.eligibility && <StatusBadge status={entry.eligibility.status} type="eligibility" size="sm" />}
+                  <Badge variant="neutral" size="sm">Added by you</Badge>
+                </div>
+                <p className="text-caption text-text-muted mt-1">
+                  {entry.deadline ? `Deadline ${new Date(entry.deadline).toLocaleDateString()}` : 'No deadline'}
+                </p>
+              </div>
+              <Link to="/student/my-notices" className="btn-secondary btn-sm flex-shrink-0">Manage</Link>
+            </li>
+          ))}
           {filteredNotices.map((notice) => (
             <li key={`${notice.id}-list-${isSavedTab}`}>
               <NoticeCard notice={notice} saved={savedIds.has(notice.id)} onSave={handleSave} onUnsave={handleSave} savePending={saveMutation.isPending || unsaveMutation.isPending} showEligibility={!isSavedTab} compact />

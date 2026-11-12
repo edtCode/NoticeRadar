@@ -11,6 +11,9 @@ export const personalEntrySchema = z.object({
     category: z.enum(NOTICE_CATEGORIES).default("GENERAL"),
     deadline: timestamp.nullable().optional(),
     eventDate: timestamp.nullable().optional(),
+    eligibleBranches: z.array(z.string().trim().min(1).max(100)).max(50).optional(),
+    minimumCPI: z.coerce.number().min(0).max(10).nullable().optional(),
+    requiresNoBacklogs: z.boolean().nullable().optional(),
     source: z.enum(["MANUAL", "UPLOAD"]).default("MANUAL")
 });
 

@@ -418,8 +418,12 @@ export interface PersonalEntry {
     source_email: string | null;
     file_name: string | null;
     file_size: number | null;
+    eligible_branches: string[];
+    minimum_cpi: number | null;
+    requires_no_backlogs: boolean | null;
     created_at: string;
     updated_at: string;
+    eligibility?: Eligibility;
 }
 
 export interface PersonalEntryPayload {
@@ -428,6 +432,9 @@ export interface PersonalEntryPayload {
     category?: NoticeCategory;
     deadline?: string | null;
     eventDate?: string | null;
+    eligibleBranches?: string[];
+    minimumCPI?: number | null;
+    requiresNoBacklogs?: boolean | null;
 }
 
 export interface PersonalEntryDraft {
@@ -436,6 +443,9 @@ export interface PersonalEntryDraft {
     category: NoticeCategory;
     deadline: string | null;
     eventDate: string | null;
+    eligibleBranches: string[];
+    minimumCPI: number | null;
+    requiresNoBacklogs: boolean | null;
     ambiguousFields: string[];
 }
 

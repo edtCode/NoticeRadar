@@ -51,6 +51,56 @@ test("personal entries are listed for the signed-in user only", async () => {
     assert.ok(entryCall.filters.some((filter) => filter.column === "user_id" && filter.value === STUDENT_ID));
 });
 
+test("a private entry tells the student whether they are eligible", async () => {
+    const { app } = buildApp({
+        personal_entries: {
+            select: {
+                data: [{
+                    ...entryRow,
+                    eligible_branches: ["CSE"],
+                    minimum_cpi: 8,
+                    requires_no_backlogs: true
+                }]
+            }
+        },
+        student_profiles: {
+            select: { data: { branch: "Information Technology", semester: 6, cpi: 7.8, graduation_year: 2027, active_backlogs: 0 } }
+        }
+    });
+
+    const response = await request(app)
+        .get("/api/v1/me/entries")
+        .set("Authorization", "Bearer valid-token");
+
+    assert.equal(response.status, 200);
+    assert.equal(response.body.data[0].eligibility.status, "NOT_ELIGIBLE");
+    assert.match(response.body.data[0].eligibility.reasons[0], /Branch/);
+});
+
+test("eligibility criteria are saved with the entry", async () => {
+    const { app, userClient } = buildApp({
+        personal_entries: { insert: { data: entryRow } }
+    });
+
+    const response = await request(app)
+        .post("/api/v1/me/entries")
+        .set("Authorization", "Bearer valid-token")
+        .send({
+            title: "Google STEP internship",
+            category: "INTERNSHIP",
+            eligibleBranches: ["CSE", "IT"],
+            minimumCPI: 7.5,
+            requiresNoBacklogs: true
+        });
+
+    assert.equal(response.status, 201);
+
+    const insertCall = userClient.calls.find((call) => call.table === "personal_entries" && call.method === "insert");
+    assert.deepEqual(insertCall.payload.eligible_branches, ["CSE", "IT"]);
+    assert.equal(insertCall.payload.minimum_cpi, 7.5);
+    assert.equal(insertCall.payload.requires_no_backlogs, true);
+});
+
 test("a student can add their own notice or event", async () => {
     const { app, userClient } = buildApp({
         personal_entries: { insert: { data: entryRow } }
