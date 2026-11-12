@@ -9,6 +9,9 @@ import type {
   StudentProfileUpdatePayload,
   Institution,
   Department,
+  InstitutionSearchResult,
+  InstitutionRequestPayload,
+  InstitutionRequestRecord,
 } from '../types';
 
 export const authService = {
@@ -16,8 +19,8 @@ export const authService = {
     return api.post<LoginResponse>('/auth/login', { email, password });
   },
 
-  async register(name: string, email: string, password: string): Promise<RegisterResponse> {
-    return api.post<RegisterResponse>('/auth/register', { name, email, password });
+  async register(name: string, email: string, password: string, institutionId?: string): Promise<RegisterResponse> {
+    return api.post<RegisterResponse>('/auth/register', { name, email, password, ...(institutionId ? { institutionId } : {}) });
   },
 
   async logout(): Promise<void> {
@@ -49,6 +52,15 @@ export const authService = {
 
   async getDepartments(institutionId: string): Promise<Department[]> {
     return api.get<Department[]>(`/institutions/${institutionId}/departments`);
+  },
+
+  // Institution autocomplete (public — used during registration too)
+  async searchInstitutions(query: string): Promise<InstitutionSearchResult[]> {
+    return api.get<InstitutionSearchResult[]>('/institutions/search', { q: query });
+  },
+
+  async requestInstitution(payload: InstitutionRequestPayload): Promise<InstitutionRequestRecord> {
+    return api.post<InstitutionRequestRecord>('/institutions/requests', payload);
   },
 };
 

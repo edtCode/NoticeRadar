@@ -5,6 +5,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Eye, EyeOff, Check, AlertCircle } from 'lucide-react';
 import { Input } from '../../components/ui/Input';
+import { InstitutionAutocomplete } from '../../components/common/InstitutionAutocomplete';
 import { useRegister } from '../../hooks/useAuthService';
 import { ROUTES } from '../../constants';
 
@@ -12,6 +13,7 @@ const registerSchema = z
   .object({
     name: z.string().min(2, 'Enter your full name'),
     email: z.string().min(1, 'Email is required').email('Enter a valid email address'),
+    institutionId: z.string().optional(),
     password: z.string().min(8, 'Password must be at least 8 characters'),
     confirmPassword: z.string().min(1, 'Confirm your password'),
     acceptTerms: z.boolean().refine((v) => v, { message: 'You must accept the terms and conditions' }),
@@ -62,6 +64,7 @@ export function RegisterPage() {
 
   const password = watch('password');
   const accepted = watch('acceptTerms');
+  const institutionId = watch('institutionId');
   const checks = passwordChecks(password || '');
 
   const onSubmit = async (data: RegisterForm) => {
@@ -70,6 +73,7 @@ export function RegisterPage() {
         name: data.name,
         email: data.email,
         password: data.password,
+        institutionId: institutionId || undefined,
       });
       setRegisteredEmail(data.email);
       setRegistrationState(response.requiresEmailConfirmation || !response.session ? 'verify' : 'success');
@@ -127,6 +131,14 @@ export function RegisterPage() {
 
           <Input label="Full name" type="text" autoComplete="name" placeholder="Shivam Kumar" error={errors.name?.message} {...register('name')} />
           <Input label="Email address" type="email" autoComplete="email" placeholder="you@college.edu" error={errors.email?.message} {...register('email')} />
+
+          <InstitutionAutocomplete
+            label="College / institution (optional)"
+            value={watch('institutionId') ?? ''}
+            onChange={(institution) => setValue('institutionId', institution?.id ?? '', { shouldValidate: true })}
+            placeholder="Search your college or university"
+            hint="Pick from the verified list. You can also add this during profile setup."
+          />
 
           <div className="relative">
             <Input

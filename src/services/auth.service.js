@@ -17,7 +17,7 @@ const toSession = (session) => ({
     tokenType: session.token_type
 });
 
-const ensureProfile = async (adminClient, user) => {
+const ensureProfile = async (adminClient, user, institutionId = null) => {
     const { data: existing, error } = await adminClient
         .from("profiles")
         .select("id, name, email, role, institution_id")
@@ -29,7 +29,22 @@ const ensureProfile = async (adminClient, user) => {
     }
 
     if (existing) {
-        return existing;
+        if (!institutionId || existing.institution_id === institutionId) {
+            return existing;
+        }
+
+        const { data: updated, error: updateError } = await adminClient
+            .from("profiles")
+            .update({ institution_id: institutionId })
+            .eq("id", user.id)
+            .select("id, name, email, role, institution_id")
+            .single();
+
+        if (updateError) {
+            throw databaseError(updateError);
+        }
+
+        return updated;
     }
 
     const { data: created, error: insertError } = await adminClient
@@ -38,7 +53,8 @@ const ensureProfile = async (adminClient, user) => {
             id: user.id,
             name: user.name,
             email: user.email,
-            role: "STUDENT"
+            role: "STUDENT",
+            institution_id: institutionId
         })
         .select("id, name, email, role, institution_id")
         .single();
@@ -65,6 +81,30 @@ const ensureProfile = async (adminClient, user) => {
     }
 
     return created;
+};
+
+// Registration may carry an optional institution picked from the autocomplete.
+// It must exist already — students can never create unverified institutions.
+const resolveInstitutionId = async (adminClient, institutionId) => {
+    if (!institutionId) {
+        return null;
+    }
+
+    const { data, error } = await adminClient
+        .from("institutions")
+        .select("id")
+        .eq("id", institutionId)
+        .maybeSingle();
+
+    if (error) {
+        throw databaseError(error);
+    }
+
+    if (!data) {
+        throw new ApiError(400, "Institution not found");
+    }
+
+    return data.id;
 };
 
 const toRegisterError = (error) => {
@@ -112,7 +152,9 @@ const discardUnconfirmedUser = async (adminClient, userId) => {
 // Sends the confirmation email through Resend so signups are not capped by
 // Supabase's built-in mailer. The account is created unconfirmed and rolled
 // back if the email cannot be sent, so the user can simply try again.
-const registerWithMailer = async (adminClient, { name, email, password }) => {
+const registerWithMailer = async (adminClient, { name, email, password, institutionId }) => {
+    const verifiedInstitutionId = await resolveInstitutionId(adminClient, institutionId);
+
     const { data, error } = await adminClient.auth.admin.createUser({
         email,
         password,
@@ -153,7 +195,7 @@ const registerWithMailer = async (adminClient, { name, email, password }) => {
         throw new ApiError(502, "We could not send the confirmation email. Please try again in a moment.");
     }
 
-    const profile = await ensureProfile(adminClient, { id: data.user.id, name, email });
+    const profile = await ensureProfile(adminClient, { id: data.user.id, name, email }, verifiedInstitutionId);
 
     return {
         user: toUser(profile),
@@ -163,10 +205,11 @@ const registerWithMailer = async (adminClient, { name, email, password }) => {
 };
 
 export const registerUser = async ({ publicClient, adminClient }, payload) => {
-    const { name, email, password } = payload;
+    const { name, email, password, institutionId } = payload;
+    const verifiedInstitutionId = await resolveInstitutionId(adminClient, institutionId);
 
     if (await isMailEnabled()) {
-        return registerWithMailer(adminClient, { name, email, password });
+        return registerWithMailer(adminClient, { name, email, password, institutionId });
     }
 
     const { data, error } = await publicClient.auth.signUp({
@@ -189,7 +232,7 @@ export const registerUser = async ({ publicClient, adminClient }, payload) => {
         throw new ApiError(409, "Email already registered");
     }
 
-    const profile = await ensureProfile(adminClient, { id: data.user.id, name, email });
+    const profile = await ensureProfile(adminClient, { id: data.user.id, name, email }, verifiedInstitutionId);
 
     return {
         user: toUser(profile),

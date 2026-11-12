@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -7,9 +7,10 @@ import { Check, ChevronLeft, ChevronRight, AlertTriangle } from 'lucide-react';
 import { Input, Select } from '../../components/ui/Input';
 import { SelectDropdown } from '../../components/ui/Dropdown';
 import { SectionHeader } from '../../components/common/PageHeader';
-import { useStudentProfile, useInstitutions, useDepartments, useCreateStudentProfile } from '../../hooks/useAuthService';
-import { INTEREST_OPTIONS, BRANCH_OPTIONS, SEMESTER_OPTIONS, NOTIFICATION_TYPES } from '../../constants';
-import type { Institution, Department as DepartmentRow } from '../../types';
+import { InstitutionAutocomplete } from '../../components/common/InstitutionAutocomplete';
+import { useStudentProfile, useDepartments, useCreateStudentProfile } from '../../hooks/useAuthService';
+import { INTEREST_OPTIONS, BRANCH_OPTIONS, SEMESTER_OPTIONS } from '../../constants';
+import type { Department as DepartmentRow, InstitutionSearchResult } from '../../types';
 import { cn } from '../../utils/helpers';
 
 const onboardingSchema = z.object({
@@ -34,9 +35,9 @@ export function OnboardingPage() {
   const [formError, setFormError] = useState<string | null>(null);
 
   const { data: profile } = useStudentProfile();
-  const { data: institutionsData, isError: institutionsError } = useInstitutions();
   const [selectedInstitutionId, setSelectedInstitutionId] = useState('');
-  const { data: departmentsData, isError: departmentsError } = useDepartments(selectedInstitutionId);
+  const [institutionName, setInstitutionName] = useState('');
+  const { data: departmentsData, isError: departmentsError, isLoading: departmentsLoading } = useDepartments(selectedInstitutionId);
 
   const {
     register,
@@ -56,8 +57,31 @@ export function OnboardingPage() {
 
   const createProfile = useCreateStudentProfile();
 
-  const institutions = institutionsData ?? [];
   const departments = departmentsData ?? [];
+
+  // Registration can already carry an institution — prefill it once loaded.
+  useEffect(() => {
+    const institution = profile?.institutions;
+    if (!institution || selectedInstitutionId) return;
+
+    setValue('institutionId', institution.id);
+    setSelectedInstitutionId(institution.id);
+    setInstitutionName(institution.name);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [profile?.institutions?.id]);
+
+  const handleInstitutionChange = (institution: InstitutionSearchResult | null) => {
+    const nextId = institution?.id ?? '';
+    const changed = nextId !== selectedInstitutionId;
+
+    setValue('institutionId', nextId, { shouldValidate: true });
+    setInstitutionName(institution?.name ?? '');
+
+    if (changed) {
+      setValue('departmentId', '');
+      setSelectedInstitutionId(nextId);
+    }
+  };
 
   const watched = watch();
   const categoryForInterest = INTEREST_OPTIONS;
@@ -150,41 +174,47 @@ export function OnboardingPage() {
         {step === 0 && (
           <div className="space-y-5">
             <SectionHeader title="Institution information" description="Which institution and department do you belong to?" />
-            {institutionsError ? (
-              <div className="p-3 bg-warning-soft border border-warning rounded-sm flex items-start gap-2" role="alert">
-                <AlertTriangle className="w-5 h-5 text-warning flex-shrink-0 mt-0.5" aria-hidden="true" />
-                <p className="text-body-sm text-warning">Institution list is unavailable right now. Refresh, or contact your administrator — options are not hardcoded.</p>
-              </div>
-            ) : (
-              <SelectDropdown
-                value={watched.institutionId ?? ''}
-                placeholder="Select institution"
-                aria-label="Institution"
-                options={(institutions as Institution[]).map((i) => ({ value: i.id, label: i.name }))}
-                onChange={(v) => {
-                  setValue('institutionId', v, { shouldValidate: true });
-                  setValue('departmentId', '');
-                  setSelectedInstitutionId(v);
-                }}
-              />
-            )}
-            {errors.institutionId?.message && <p className="text-body-sm text-danger" role="alert">{errors.institutionId.message}</p>}
+            <InstitutionAutocomplete
+              value={watched.institutionId ?? ''}
+              initialName={institutionName}
+              onChange={handleInstitutionChange}
+              placeholder="Search by college name, city or abbreviation"
+              hint="Pick your institution from the verified list so notices reach you."
+              error={errors.institutionId?.message}
+              allowRequest
+            />
 
-            {departmentsError ? (
-              <div className="p-3 bg-warning-soft border border-warning rounded-sm" role="alert">
-                <p className="text-body-sm text-warning">Department list is unavailable for this institution.</p>
+            {selectedInstitutionId && (
+              <div className="space-y-2">
+                <p className="text-body-sm font-medium text-text">Department</p>
+                {departmentsLoading ? (
+                  <div className="h-10 bg-border/40 rounded-sm skeleton-shimmer" aria-label="Loading departments" />
+                ) : departmentsError ? (
+                  <div className="p-3 bg-warning-soft border border-warning rounded-sm" role="alert">
+                    <p className="text-body-sm text-warning">Department list is unavailable for this institution. Try again in a moment.</p>
+                  </div>
+                ) : departments.length === 0 ? (
+                  <div className="p-3 bg-warning-soft border border-warning rounded-sm" role="alert">
+                    <p className="text-body-sm text-warning">
+                      No departments are listed for this institution yet. Use “Can&apos;t find your institution?” to ask
+                      for it to be reviewed, or contact your administrator.
+                    </p>
+                  </div>
+                ) : (
+                  <SelectDropdown
+                    value={watched.departmentId ?? ''}
+                    placeholder="Select department"
+                    aria-label="Department"
+                    options={(departments as DepartmentRow[]).map((d) => ({ value: d.id, label: d.name }))}
+                    onChange={(v) => setValue('departmentId', v, { shouldValidate: true })}
+                  />
+                )}
+                {errors.departmentId?.message && <p className="text-body-sm text-danger" role="alert">{errors.departmentId.message}</p>}
               </div>
-            ) : (
-              <SelectDropdown
-                value={watched.departmentId ?? ''}
-                placeholder="Select department"
-                aria-label="Department"
-                disabled={!selectedInstitutionId}
-                options={(departments as DepartmentRow[]).map((d) => ({ value: d.id, label: d.name }))}
-                onChange={(v) => setValue('departmentId', v, { shouldValidate: true })}
-              />
             )}
-            {errors.departmentId?.message && <p className="text-body-sm text-danger" role="alert">{errors.departmentId.message}</p>}
+            {!selectedInstitutionId && errors.departmentId?.message && (
+              <p className="text-body-sm text-danger" role="alert">{errors.departmentId.message}</p>
+            )}
           </div>
         )}
 
@@ -271,7 +301,7 @@ export function OnboardingPage() {
               <div className="flex justify-between py-2 border-b border-border">
                 <dt className="text-body-sm text-text-muted">Institution</dt>
                 <dd className="text-body-sm font-medium text-text">
-                  {institutions.find((i) => i.id === watched.institutionId)?.name || '—'}
+                  {institutionName || '—'}
                 </dd>
               </div>
               <div className="flex justify-between py-2 border-b border-border">

@@ -48,6 +48,13 @@ export interface LoginResponse {
     session: SessionTokens;
 }
 
+export interface RegisterPayload {
+    name: string;
+    email: string;
+    password: string;
+    institutionId?: string;
+}
+
 export interface RegisterResponse {
     user: AuthUser;
     session: SessionTokens | null;
@@ -58,6 +65,34 @@ export interface Institution {
     id: string;
     name: string;
     slug: string;
+    city?: string | null;
+    state?: string | null;
+    institution_type?: string | null;
+}
+
+export interface InstitutionSearchResult {
+    id: string;
+    name: string;
+    city: string | null;
+    state: string | null;
+    institution_type: string | null;
+}
+
+export interface InstitutionRequestPayload {
+    name: string;
+    city?: string;
+    state?: string;
+    institutionType?: string;
+}
+
+export interface InstitutionRequestRecord {
+    id: string;
+    name: string;
+    city: string | null;
+    state: string | null;
+    institution_type: string | null;
+    status: 'PENDING' | 'APPROVED' | 'REJECTED';
+    created_at: string;
 }
 
 export interface Department {

@@ -169,18 +169,36 @@ const createStorageApi = (client) => {
             };
         }
     };
+};const createRpc = (client, fn, params) => {
+  const record = { type: "rpc", function: fn, params };
+  client.calls.push(record);
+
+  const execute = async () => {
+    const handler = client.rpcResponses[fn];
+    const value = typeof handler === "function" ? await handler(record) : handler;
+
+    return {
+      data: null,
+      error: null,
+      ...value
+    };
+  };
+
+  return { then: (resolve, reject) => execute().then(resolve, reject) };
 };
 
-export const createMockSupabase = ({ tables = {}, auth = {}, storage = {} } = {}) => {
-    const calls = [];
+export const createMockSupabase = ({ tables = {}, auth = {}, storage = {}, rpc = {} } = {}) => {
+  const calls = [];
 
-    const client = {
-        tables,
-        calls,
-        storageResponses: storage,
-        auth,
-        from: (table) => createBuilder(client, table)
-    };
+  const client = {
+    tables,
+    calls,
+    storageResponses: storage,
+    rpcResponses: rpc,
+    auth,
+    from: (table) => createBuilder(client, table),
+    rpc: (fn, params) => createRpc(client, fn, params)
+  };
 
     client.storage = createStorageApi(client);
 

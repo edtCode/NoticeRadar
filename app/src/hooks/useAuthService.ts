@@ -1,7 +1,16 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import authService from '../services/auth.service';
 import { useAuthStore } from '../stores/authStore';
-import type { StudentProfileResponse, StudentProfilePayload, StudentProfileUpdatePayload, Institution, Department } from '../types';
+import type {
+  StudentProfileResponse,
+  StudentProfilePayload,
+  StudentProfileUpdatePayload,
+  Institution,
+  Department,
+  InstitutionSearchResult,
+  InstitutionRequestPayload,
+  InstitutionRequestRecord,
+} from '../types';
 
 export function useLogin() {
   const { login } = useAuthStore();
@@ -19,8 +28,8 @@ export function useRegister() {
   const { register } = useAuthStore();
 
   return useMutation({
-    mutationFn: ({ name, email, password }: { name: string; email: string; password: string }) =>
-      register(name, email, password),
+    mutationFn: ({ name, email, password, institutionId }: { name: string; email: string; password: string; institutionId?: string }) =>
+      register(name, email, password, institutionId),
   });
 }
 
@@ -70,6 +79,22 @@ export function useInstitutions() {
     queryKey: ['institutions'],
     queryFn: () => authService.getInstitutions(),
     staleTime: 300000, // 5 minutes
+  });
+}
+
+export function useInstitutionSearch(query: string, enabled = true) {
+  return useQuery<InstitutionSearchResult[]>({
+    queryKey: ['institutions', 'search', query],
+    queryFn: () => authService.searchInstitutions(query),
+    enabled: enabled && query.trim().length >= 2,
+    staleTime: 60000,
+    retry: 1,
+  });
+}
+
+export function useRequestInstitution() {
+  return useMutation<InstitutionRequestRecord, Error, InstitutionRequestPayload>({
+    mutationFn: (payload: InstitutionRequestPayload) => authService.requestInstitution(payload),
   });
 }
 

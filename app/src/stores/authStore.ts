@@ -11,7 +11,7 @@ interface AuthState {
   sessionRestored: boolean;
   error: string | null;
   login: (email: string, password: string) => Promise<void>;
-  register: (name: string, email: string, password: string) => Promise<RegisterResponse>;
+  register: (name: string, email: string, password: string, institutionId?: string) => Promise<RegisterResponse>;
   logout: () => Promise<void>;
   restoreSession: () => Promise<void>;
   setUser: (user: AuthUser | null) => void;
@@ -44,10 +44,10 @@ export const useAuthStore = create<AuthState>()(
         }
       },
 
-      register: async (name: string, email: string, password: string) => {
+      register: async (name: string, email: string, password: string, institutionId?: string) => {
         set({ isLoading: true, error: null });
         try {
-          const response = await authService.register(name, email, password);
+          const response = await authService.register(name, email, password, institutionId);
           if (response.session) {
             api.setAuthTokens(response.session.accessToken, response.session.refreshToken);
             set({

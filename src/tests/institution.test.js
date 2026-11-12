@@ -54,3 +54,71 @@ test("rejects an invalid institution identifier for department lookup", async ()
     assert.equal(response.status, 400);
     assert.equal(response.body.error, "Invalid identifier");
 });
+
+test("searches institutions without requiring a session", async () => {
+    const matches = [{
+        id: INSTITUTION_ID,
+        name: "Indian Institute of Technology Madras",
+        city: "Chennai",
+        state: "Tamil Nadu",
+        institution_type: "INSTITUTE"
+    }];
+    const adminClient = createMockSupabase({
+        rpc: { search_institutions: { data: matches } }
+    });
+    const app = buildTestApp({ adminClient });
+
+    const response = await request(app).get("/api/v1/institutions/search?q=indian inst");
+
+    assert.equal(response.status, 200);
+    assert.deepEqual(response.body.data, matches);
+
+    const call = adminClient.calls.find((entry) => entry.type === "rpc");
+    assert.equal(call.function, "search_institutions");
+    assert.deepEqual(call.params, { search_query: "indian inst", max_results: 8 });
+});
+
+test("rejects an empty institution search query", async () => {
+    const { app } = buildApp({});
+    const response = await request(app).get("/api/v1/institutions/search?q=%20%20");
+
+    assert.equal(response.status, 400);
+    assert.equal(response.body.error, "Validation failed");
+});
+
+test("a student can submit an institution request for review", async () => {
+    const created = {
+        id: "88888888-8888-4888-8888-888888888888",
+        name: "New Institute",
+        city: "Pune",
+        state: "Maharashtra",
+        institution_type: "COLLEGE",
+        status: "PENDING",
+        created_at: "2026-11-13T00:00:00.000Z"
+    };
+    const { app, userClient } = buildApp({
+        institution_requests: { insert: { data: created } }
+    });
+
+    const response = await request(app)
+        .post("/api/v1/institutions/requests")
+        .set("Authorization", "Bearer valid-token")
+        .send({ name: "New Institute", city: "Pune", state: "Maharashtra", institutionType: "COLLEGE" });
+
+    assert.equal(response.status, 201);
+    assert.deepEqual(response.body.data, created);
+
+    const insert = userClient.calls.find((call) => call.table === "institution_requests");
+    assert.equal(insert.method, "insert");
+    assert.equal(insert.payload.requested_by, studentProfileRow.id);
+    assert.equal(insert.payload.institution_type, "COLLEGE");
+});
+
+test("institution requests require authentication", async () => {
+    const { app } = buildApp({});
+    const response = await request(app)
+        .post("/api/v1/institutions/requests")
+        .send({ name: "New Institute" });
+
+    assert.equal(response.status, 401);
+});

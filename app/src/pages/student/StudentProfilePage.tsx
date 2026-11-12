@@ -4,13 +4,16 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Info, Pencil, Check } from 'lucide-react';
-import { useStudentProfile, useUpdateStudentProfile } from '../../hooks/useAuthService';
-import { Input, Textarea, Select } from '../../components/ui/Input';
+import { useStudentProfile, useUpdateStudentProfile, useDepartments } from '../../hooks/useAuthService';
+import { Input, Select } from '../../components/ui/Input';
 import { Button, ErrorState, Badge, Avatar } from '../../components/ui';
+import { InstitutionAutocomplete } from '../../components/common/InstitutionAutocomplete';
 import { useAddToast } from '../../stores/uiStore';
 import { INTEREST_OPTIONS, BRANCH_OPTIONS, SEMESTER_OPTIONS, ROUTES } from '../../constants';
 
 const profileSchema = z.object({
+  institutionId: z.string().min(1, 'Select your institution'),
+  departmentId: z.string().min(1, 'Select your department'),
   branch: z.string().min(1, 'Select your branch'),
   semester: z.number().min(1).max(8),
   cpi: z.number().min(0).max(10),
@@ -36,6 +39,7 @@ export function StudentProfilePage() {
   const record = profile ? firstProfileRecord(profile) : null;
 
   const [interestsValue, setInterestsValue] = useState<string[]>([]);
+  const [institutionName, setInstitutionName] = useState('');
 
   const {
     register,
@@ -47,6 +51,8 @@ export function StudentProfilePage() {
   } = useForm<ProfileForm>({
     resolver: zodResolver(profileSchema),
     defaultValues: {
+      institutionId: '',
+      departmentId: '',
       branch: '',
       semester: 1,
       cpi: 0,
@@ -56,20 +62,43 @@ export function StudentProfilePage() {
     },
   });
 
+  // Restores the persisted profile into the form (used on load and on cancel),
+  // so cancelling never leaves the edit form blank.
+  const resetFormToProfile = () => {
+    if (!record) return;
+
+    reset({
+      institutionId: profile?.institution_id ?? '',
+      departmentId: record.department_id ?? '',
+      branch: record.branch ?? '',
+      semester: record.semester ?? 1,
+      cpi: record.cpi ?? 0,
+      graduationYear: record.graduation_year ?? new Date().getFullYear() + 1,
+      activeBacklogs: record.active_backlogs ?? 0,
+      interests: record.interests ?? [],
+    });
+    setInterestsValue(record.interests ?? []);
+    setInstitutionName(profile?.institutions?.name ?? '');
+  };
+
   useEffect(() => {
-    if (record) {
-      reset({
-        branch: record.branch ?? '',
-        semester: record.semester ?? 1,
-        cpi: record.cpi ?? 0,
-        graduationYear: record.graduation_year ?? new Date().getFullYear() + 1,
-        activeBacklogs: record.active_backlogs ?? 0,
-        interests: record.interests ?? [],
-      });
-      setInterestsValue(record.interests ?? []);
-    }
+    resetFormToProfile();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [profileQuery.data]);
+
+  const watchedInstitutionId = watch('institutionId');
+  const { data: departmentsData, isError: departmentsError, isLoading: departmentsLoading } = useDepartments(watchedInstitutionId ?? '');
+  const departments = departmentsData ?? [];
+
+  const handleInstitutionChange = (institution: { id: string; name: string } | null) => {
+    const nextId = institution?.id ?? '';
+    setInstitutionName(institution?.name ?? '');
+    setValue('institutionId', nextId, { shouldValidate: true, shouldDirty: true });
+
+    if (nextId !== (watchedInstitutionId ?? '')) {
+      setValue('departmentId', '', { shouldValidate: false, shouldDirty: true });
+    }
+  };
 
   const toggleInterest = (value: string) => {
     const next = interestsValue.includes(value) ? interestsValue.filter((i) => i !== value) : [...interestsValue, value];
@@ -80,6 +109,8 @@ export function StudentProfilePage() {
   const onSave = handleSubmit(async (data) => {
     try {
       await updateMutation.mutateAsync({
+        institutionId: data.institutionId,
+        departmentId: data.departmentId,
         branch: data.branch,
         semester: data.semester,
         cpi: data.cpi,
@@ -190,6 +221,42 @@ export function StudentProfilePage() {
         {editing ? (
           <form onSubmit={onSave} className="space-y-4" noValidate>
             <div className="grid sm:grid-cols-2 gap-4">
+              <div className="sm:col-span-2">
+                <InstitutionAutocomplete
+                  value={watchedInstitutionId ?? ''}
+                  initialName={institutionName || profile.institutions?.name || ''}
+                  onChange={handleInstitutionChange}
+                  placeholder="Search by college name, city or abbreviation"
+                  hint="Changing institution resets your department — pick the new one below."
+                  error={errors.institutionId?.message}
+                  allowRequest
+                />
+              </div>
+              <div className="sm:col-span-2">
+                {departmentsLoading ? (
+                  <div className="h-10 bg-border/40 rounded-sm skeleton-shimmer" aria-label="Loading departments" />
+                ) : departmentsError ? (
+                  <div className="p-3 bg-warning-soft border border-warning rounded-sm" role="alert">
+                    <p className="text-body-sm text-warning">Department list is unavailable for this institution.</p>
+                  </div>
+                ) : departments.length === 0 ? (
+                  <div className="p-3 bg-warning-soft border border-warning rounded-sm" role="alert">
+                    <p className="text-body-sm text-warning">
+                      No departments are listed for this institution. Use “Can&apos;t find your institution?” to request
+                      an addition, or contact your administrator.
+                    </p>
+                  </div>
+                ) : (
+                  <Select
+                    label="Department"
+                    placeholder={watchedInstitutionId ? 'Select department' : 'Select an institution first'}
+                    disabled={!watchedInstitutionId}
+                    error={errors.departmentId?.message}
+                    options={departments.map((d) => ({ value: d.id, label: d.name }))}
+                    {...register('departmentId')}
+                  />
+                )}
+              </div>
               <Select
                 label="Branch"
                 placeholder="Select branch"
@@ -232,7 +299,16 @@ export function StudentProfilePage() {
             </div>
 
             <div className="flex justify-end gap-3">
-              <Button type="button" variant="ghost" onClick={() => { setEditing(false); reset(); }}>Cancel</Button>
+              <Button
+                type="button"
+                variant="ghost"
+                onClick={() => {
+                  setEditing(false);
+                  resetFormToProfile();
+                }}
+              >
+                Cancel
+              </Button>
               <Button type="submit" loading={updateMutation.isPending} disabled={!isDirty}>
                 <Check className="w-4 h-4" aria-hidden="true" /> Save changes
               </Button>
