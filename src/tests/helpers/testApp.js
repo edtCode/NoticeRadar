@@ -30,13 +30,14 @@ export const adminProfileRow = {
     institution_id: INSTITUTION_ID
 };
 
-export const createUserClient = ({ profile, tables = {}, storage = {}, token = "valid-token" }) => {
+export const createUserClient = ({ profile, tables = {}, storage = {}, rpc = {}, token = "valid-token" }) => {
     return createMockSupabase({
         tables: {
             profiles: { select: { data: profile } },
             ...tables
         },
         storage,
+        rpc,
         auth: {
             getUser: async (receivedToken) => {
                 if (receivedToken !== token) {

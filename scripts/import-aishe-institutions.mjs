@@ -15,6 +15,20 @@ if (!connectionString) {
   process.exit(1);
 }
 
+function generateAliases(name, city) {
+  const stopWords = new Set(["a", "an", "and", "of", "the", "for", "in", "at", "to", "on", "by", "with", "deemed"]);
+  const words = name.normalize("NFKD").replace(/[\u0300-\u036f]/g, "").match(/[A-Za-z0-9]+/g) ?? [];
+  const cityWords = new Set((city ?? "").toLowerCase().match(/[A-Za-z0-9]+/g) ?? []);
+  const significant = words.filter((word) => !stopWords.has(word.toLowerCase()) && !cityWords.has(word.toLowerCase()));
+  const acronym = significant.map((word) => word[0]).join("").toUpperCase();
+  const aliases = new Set();
+  if (acronym.length >= 2 && acronym.length <= 10) {
+    aliases.add(acronym);
+    if (city) aliases.add(`${acronym} ${city}`);
+  }
+  return [...aliases];
+}
+
 function parseRows(text, prefix, expectedFields) {
   const rows = [];
   const seen = new Set();
@@ -53,7 +67,7 @@ function parseRows(text, prefix, expectedFields) {
       city: district,
       state,
       institution_type: prefix === "C" ? fields[7] : "UNIVERSITY",
-      aliases: [],
+      aliases: generateAliases(name, district),
       established_year: /^\d{4}$/.test(established) ? Number(established) : null,
     });
   }

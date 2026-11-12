@@ -4,7 +4,7 @@ const currentYear = new Date().getFullYear();
 
 export const studentProfileSchema = z.object({
     institutionId: z.string().uuid(),
-    departmentId: z.string().uuid(),
+    departmentName: z.string().trim().min(2).max(100),
     branch: z.string().trim().min(1).max(100),
     semester: z.coerce.number().int().min(1).max(8),
     cpi: z.coerce.number().min(0).max(10),

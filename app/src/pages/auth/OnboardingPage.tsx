@@ -5,17 +5,16 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Check, ChevronLeft, ChevronRight, AlertTriangle } from 'lucide-react';
 import { Input, Select } from '../../components/ui/Input';
-import { SelectDropdown } from '../../components/ui/Dropdown';
 import { SectionHeader } from '../../components/common/PageHeader';
 import { InstitutionAutocomplete } from '../../components/common/InstitutionAutocomplete';
-import { useStudentProfile, useDepartments, useCreateStudentProfile } from '../../hooks/useAuthService';
+import { useStudentProfile, useCreateStudentProfile } from '../../hooks/useAuthService';
 import { INTEREST_OPTIONS, BRANCH_OPTIONS, SEMESTER_OPTIONS } from '../../constants';
-import type { Department as DepartmentRow, InstitutionSearchResult } from '../../types';
+import type { InstitutionSearchResult } from '../../types';
 import { cn } from '../../utils/helpers';
 
 const onboardingSchema = z.object({
   institutionId: z.string().min(1, 'Select your institution'),
-  departmentId: z.string().min(1, 'Select your department'),
+  departmentName: z.string().trim().min(2, 'Type your department name').max(100, 'Department name is too long'),
   branch: z.string().min(1, 'Select your branch'),
   semester: z.number({ error: 'Select your semester' }).min(1).max(8),
   cpi: z.number({ error: 'Enter your CPI' }).min(0, 'CPI cannot be negative').max(10, 'CPI cannot exceed 10'),
@@ -37,7 +36,6 @@ export function OnboardingPage() {
   const { data: profile } = useStudentProfile();
   const [selectedInstitutionId, setSelectedInstitutionId] = useState('');
   const [institutionName, setInstitutionName] = useState('');
-  const { data: departmentsData, isError: departmentsError, isLoading: departmentsLoading } = useDepartments(selectedInstitutionId);
 
   const {
     register,
@@ -56,8 +54,6 @@ export function OnboardingPage() {
   });
 
   const createProfile = useCreateStudentProfile();
-
-  const departments = departmentsData ?? [];
 
   // Registration can already carry an institution — prefill it once loaded.
   useEffect(() => {
@@ -78,7 +74,7 @@ export function OnboardingPage() {
     setInstitutionName(institution?.name ?? '');
 
     if (changed) {
-      setValue('departmentId', '');
+      setValue('departmentName', '');
       setSelectedInstitutionId(nextId);
     }
   };
@@ -88,7 +84,7 @@ export function OnboardingPage() {
 
   const next = async () => {
     const fieldsByStep: Record<number, (keyof OnboardingForm)[]> = {
-      0: ['institutionId', 'departmentId'],
+      0: ['institutionId', 'departmentName'],
       1: ['branch', 'semester', 'cpi', 'graduationYear', 'activeBacklogs'],
       2: ['interests'],
       3: [],
@@ -117,7 +113,7 @@ export function OnboardingPage() {
     try {
       await createProfile.mutateAsync({
         institutionId: data.institutionId,
-        departmentId: data.departmentId,
+        departmentName: data.departmentName,
         branch: data.branch,
         semester: data.semester,
         cpi: data.cpi,
@@ -184,37 +180,13 @@ export function OnboardingPage() {
               allowRequest
             />
 
-            {selectedInstitutionId && (
-              <div className="space-y-2">
-                <p className="text-body-sm font-medium text-text">Department</p>
-                {departmentsLoading ? (
-                  <div className="h-10 bg-border/40 rounded-sm skeleton-shimmer" aria-label="Loading departments" />
-                ) : departmentsError ? (
-                  <div className="p-3 bg-warning-soft border border-warning rounded-sm" role="alert">
-                    <p className="text-body-sm text-warning">Department list is unavailable for this institution. Try again in a moment.</p>
-                  </div>
-                ) : departments.length === 0 ? (
-                  <div className="p-3 bg-warning-soft border border-warning rounded-sm" role="alert">
-                    <p className="text-body-sm text-warning">
-                      No departments are listed for this institution yet. Use “Can&apos;t find your institution?” to ask
-                      for it to be reviewed, or contact your administrator.
-                    </p>
-                  </div>
-                ) : (
-                  <SelectDropdown
-                    value={watched.departmentId ?? ''}
-                    placeholder="Select department"
-                    aria-label="Department"
-                    options={(departments as DepartmentRow[]).map((d) => ({ value: d.id, label: d.name }))}
-                    onChange={(v) => setValue('departmentId', v, { shouldValidate: true })}
-                  />
-                )}
-                {errors.departmentId?.message && <p className="text-body-sm text-danger" role="alert">{errors.departmentId.message}</p>}
-              </div>
-            )}
-            {!selectedInstitutionId && errors.departmentId?.message && (
-              <p className="text-body-sm text-danger" role="alert">{errors.departmentId.message}</p>
-            )}
+            <Input
+              label="Department"
+              placeholder="e.g. Computer Science and Engineering"
+              hint="Type the name of your department exactly as your college uses it."
+              error={errors.departmentName?.message}
+              {...register('departmentName')}
+            />
           </div>
         )}
 
@@ -307,7 +279,7 @@ export function OnboardingPage() {
               <div className="flex justify-between py-2 border-b border-border">
                 <dt className="text-body-sm text-text-muted">Department</dt>
                 <dd className="text-body-sm font-medium text-text">
-                  {departments.find((d) => d.id === watched.departmentId)?.name || '—'}
+                  {watched.departmentName || '—'}
                 </dd>
               </div>
               <div className="flex justify-between py-2 border-b border-border">

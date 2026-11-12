@@ -14,7 +14,7 @@ import { createMockSupabase } from "./helpers/mockSupabase.js";
 
 const validPayload = {
     institutionId: INSTITUTION_ID,
-    departmentId: DEPARTMENT_ID,
+    departmentName: "Computer Science",
     branch: "Computer Science",
     semester: 5,
     cpi: 8.4,
@@ -24,10 +24,9 @@ const validPayload = {
 };
 
 const institutionRow = { id: INSTITUTION_ID };
-const departmentRow = { id: DEPARTMENT_ID, institution_id: INSTITUTION_ID };
 
-const buildStudentApp = ({ tables, profile = studentProfileRow }) => {
-    const userClient = createUserClient({ profile, tables });
+const buildStudentApp = ({ tables, rpc, profile = studentProfileRow }) => {
+    const userClient = createUserClient({ profile, tables, rpc });
 
     return {
         userClient,
@@ -37,9 +36,9 @@ const buildStudentApp = ({ tables, profile = studentProfileRow }) => {
 
 test("creates a valid student profile for the authenticated user", async () => {
     const { app, userClient } = buildStudentApp({
+        rpc: { find_or_create_department: { data: DEPARTMENT_ID } },
         tables: {
             institutions: { select: { data: institutionRow } },
-            departments: { select: { data: departmentRow } },
             student_profiles: {
                 insert: {
                     data: {
@@ -70,6 +69,10 @@ test("creates a valid student profile for the authenticated user", async () => {
     assert.equal(insertCall.payload.user_id, STUDENT_ID);
     assert.equal(insertCall.payload.department_id, DEPARTMENT_ID);
     assert.equal(insertCall.payload.cpi, 8.4);
+
+    const rpcCall = userClient.calls.find((call) => call.type === "rpc");
+    assert.equal(rpcCall.function, "find_or_create_department");
+    assert.deepEqual(rpcCall.params, { p_institution_id: INSTITUTION_ID, p_name: "Computer Science" });
 });
 
 test("rejects a CPI outside the allowed range", async () => {
@@ -94,21 +97,50 @@ test("rejects an invalid semester", async () => {
     assert.equal(response.status, 400);
 });
 
-test("rejects a department from another institution", async () => {
-    const { app } = buildStudentApp({
-        tables: {
-            institutions: { select: { data: institutionRow } },
-            departments: { select: { data: { id: DEPARTMENT_ID, institution_id: OTHER_INSTITUTION_ID } } }
-        }
+test("rejects a missing department name", async () => {
+    const { app } = buildStudentApp({ tables: {} });
+
+    const response = await request(app)
+        .post("/api/v1/students/profile")
+        .set("Authorization", "Bearer valid-token")
+        .send({ ...validPayload, departmentName: "   " });
+
+    assert.equal(response.status, 400);
+});
+
+test("rejects an unknown institution before resolving the department", async () => {
+    const { app, userClient } = buildStudentApp({
+        tables: { institutions: { select: { data: null } } }
     });
 
     const response = await request(app)
         .post("/api/v1/students/profile")
         .set("Authorization", "Bearer valid-token")
-        .send(validPayload);
+        .send({ ...validPayload, institutionId: OTHER_INSTITUTION_ID });
 
     assert.equal(response.status, 400);
-    assert.equal(response.body.error, "Department does not belong to the selected institution");
+    assert.equal(response.body.error, "Institution not found");
+    assert.equal(userClient.calls.some((call) => call.type === "rpc"), false);
+});
+
+test("requires a typed department when the institution changes", async () => {
+    const { app, userClient } = buildStudentApp({
+        tables: {
+            student_profiles: {
+                select: { data: { id: "99999999-9999-4999-8999-999999999999", user_id: STUDENT_ID, department_id: DEPARTMENT_ID } }
+            },
+            profiles: { select: { data: studentProfileRow } }
+        }
+    });
+
+    const response = await request(app)
+        .patch("/api/v1/students/profile")
+        .set("Authorization", "Bearer valid-token")
+        .send({ institutionId: OTHER_INSTITUTION_ID, semester: 5 });
+
+    assert.equal(response.status, 400);
+    assert.equal(response.body.error, "Department name is required when changing institution");
+    assert.equal(userClient.calls.some((call) => call.type === "rpc"), false);
 });
 
 test("reads only the authenticated user's profile", async () => {
@@ -134,7 +166,6 @@ test("updates only the authenticated user's student profile", async () => {
     const { app, userClient } = buildStudentApp({
         tables: {
             institutions: { select: { data: institutionRow } },
-            departments: { select: { data: departmentRow } },
             student_profiles: {
                 select: { data: { id: "99999999-9999-4999-8999-999999999999", user_id: STUDENT_ID, department_id: DEPARTMENT_ID } },
                 update: { data: { id: "99999999-9999-4999-8999-999999999999", user_id: STUDENT_ID, cpi: 9.1 } }

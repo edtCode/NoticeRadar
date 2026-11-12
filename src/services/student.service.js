@@ -26,7 +26,6 @@ const PROFILE_COLUMNS = `
 `;
 
 const toStudentProfile = (payload) => ({
-    department_id: payload.departmentId,
     branch: payload.branch,
     semester: payload.semester,
     cpi: payload.cpi,
@@ -39,7 +38,7 @@ const removeUndefined = (object) => {
     return Object.fromEntries(Object.entries(object).filter(([, value]) => value !== undefined));
 };
 
-const checkInstitutionDepartment = async (supabase, institutionId, departmentId) => {
+const checkInstitution = async (supabase, institutionId) => {
     const { data: institution, error: institutionError } = await supabase
         .from("institutions")
         .select("id")
@@ -53,24 +52,21 @@ const checkInstitutionDepartment = async (supabase, institutionId, departmentId)
     if (!institution) {
         throw new ApiError(400, "Institution not found");
     }
+};
 
-    const { data: department, error: departmentError } = await supabase
-        .from("departments")
-        .select("id, institution_id")
-        .eq("id", departmentId)
-        .maybeSingle();
+// Students type their department name, so the name is resolved to a department
+// row for the chosen institution (creating it the first time it is used).
+const resolveDepartmentId = async (supabase, institutionId, departmentName) => {
+    const { data, error } = await supabase.rpc("find_or_create_department", {
+        p_institution_id: institutionId,
+        p_name: departmentName
+    });
 
-    if (departmentError) {
-        throw databaseError(departmentError);
+    if (error) {
+        throw databaseError(error);
     }
 
-    if (!department) {
-        throw new ApiError(400, "Department not found");
-    }
-
-    if (department.institution_id !== institutionId) {
-        throw new ApiError(400, "Department does not belong to the selected institution");
-    }
+    return data;
 };
 
 const syncProfileInstitution = async (supabase, userId, institutionId) => {
@@ -103,12 +99,15 @@ export const getStudentProfile = async (supabase, userId) => {
 };
 
 export const createStudentProfile = async (supabase, userId, payload) => {
-    await checkInstitutionDepartment(supabase, payload.institutionId, payload.departmentId);
+    await checkInstitution(supabase, payload.institutionId);
+
+    const departmentId = await resolveDepartmentId(supabase, payload.institutionId, payload.departmentName);
 
     const { data, error } = await supabase
         .from("student_profiles")
         .insert({
             user_id: userId,
+            department_id: departmentId,
             ...toStudentProfile(payload)
         })
         .select("id, user_id, department_id, branch, semester, cpi, graduation_year, active_backlogs, interests")
@@ -149,15 +148,22 @@ export const updateStudentProfile = async (supabase, userId, payload) => {
     }
 
     const institutionId = payload.institutionId ?? profile?.institution_id;
-    const departmentId = payload.departmentId ?? existing.department_id;
 
     if (!institutionId) {
         throw new ApiError(400, "Institution is required");
     }
 
-    await checkInstitutionDepartment(supabase, institutionId, departmentId);
+    // Changing institution requires the typed department again so the profile
+    // never keeps a department that belongs to the previous institution.
+    if (payload.institutionId && payload.institutionId !== profile?.institution_id && !payload.departmentName) {
+        throw new ApiError(400, "Department name is required when changing institution");
+    }
 
-    const fields = removeUndefined(toStudentProfile(payload));
+    const departmentId = payload.departmentName
+        ? await resolveDepartmentId(supabase, institutionId, payload.departmentName)
+        : existing.department_id;
+
+    const fields = { ...removeUndefined(toStudentProfile(payload)), department_id: departmentId };
 
     if (Object.keys(fields).length === 0) {
         throw new ApiError(400, "No fields to update");

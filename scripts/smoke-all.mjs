@@ -314,7 +314,7 @@ await step("GET /students/profile returns the seeded profile", async () => {
 await step("POST /students/profile creates a profile for a new student", async () => {
     const body = expectStatus(await call("post", "/api/v1/students/profile", tokens.profileStudent, {
         institutionId: state.institutionId,
-        departmentId: state.departmentId,
+        departmentName: "Computer Science",
         branch: "IT",
         semester: 4,
         cpi: 7.2,

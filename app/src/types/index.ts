@@ -130,7 +130,7 @@ export interface StudentProfileResponse {
 
 export interface StudentProfilePayload {
     institutionId: string;
-    departmentId: string;
+    departmentName: string;
     branch: string;
     semester: number;
     cpi: number;
