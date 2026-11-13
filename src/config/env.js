@@ -29,7 +29,12 @@ export const env = {
         baseUrl: process.env.LLM_BASE_URL || "https://api.openai.com/v1",
         model: process.env.LLM_MODEL || "gpt-4o-mini"
     },
-    schedulerEnabled: process.env.ENABLE_SCHEDULER === "true"
+    schedulerEnabled: process.env.ENABLE_SCHEDULER === "true",
+    google: {
+        clientId: process.env.GOOGLE_CLIENT_ID,
+        clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+        redirectUri: process.env.GOOGLE_OAUTH_REDIRECT_URI
+    }
 };
 
 export const validateEnv = () => {

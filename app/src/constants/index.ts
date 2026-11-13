@@ -50,6 +50,11 @@ export const ROUTES = {
   STUDENT_MY_NOTICES: '/student/my-notices',
   STUDENT_HELP: '/student/help',
 
+  // Gmail / email intelligence
+  STUDENT_GMAIL_CONNECT: '/student/gmail-connect',
+  STUDENT_ANNOUNCEMENTS: '/student/announcements',
+  STUDENT_ANNOUNCEMENT_DETAIL: (id: string) => `/student/announcements/${id}`,
+
   // Admin
   ADMIN_DASHBOARD: '/admin/dashboard',
   ADMIN_NOTICES: '/admin/notices',

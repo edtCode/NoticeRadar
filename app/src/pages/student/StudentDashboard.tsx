@@ -3,18 +3,21 @@ import { Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import {
   FileText, Bookmark, CalendarClock, Target, ChevronRight, Inbox, AlertTriangle, Clock, FilePlus2,
+  Mail
 } from 'lucide-react';
 import { noticeService } from '../../services/notice.service';
+import { emailService } from '../../services/email.service';
 import { deadlineService } from '../../services/deadline.service';
 import { useAuthStore } from '../../stores/authStore';
 import { NoticeCard } from '../../components/notices/NoticeCard';
-import { CategoryBadge, StatusBadge, Button, ErrorState, NoticeCardSkeleton, DashboardStatCardSkeleton } from '../../components/ui';
+import { CategoryBadge, Badge, StatusBadge, Button, ErrorState, NoticeCardSkeleton, DashboardStatCardSkeleton } from '../../components/ui';
 import { useSaveNotice, useUnsaveNotice, useSavedNotices } from '../../hooks/useNoticeService';
 import { usePersonalEntries } from '../../hooks/usePersonalEntryService';
 import { AnimatedNumber } from '../../components/motion';
 import { formatDate, daysUntil } from '../../utils/helpers';
 import { NOTICE_CATEGORIES, NOTICE_CATEGORY_LABELS, ROUTES } from '../../constants';
 import type { Notice, NoticeCategory, UpcomingDeadline } from '../../types';
+import type { EmailAnnouncement } from '../../types/email';
 import { useAddToast } from '../../stores/uiStore';
 
 export function StudentDashboard() {
@@ -36,6 +39,12 @@ export function StudentDashboard() {
 
   const savedQuery = useSavedNotices({ page: 1, limit: 1 });
   const personalQuery = usePersonalEntries({ limit: 4 });
+  const emailAnnouncementsQuery = useQuery({
+    queryKey: ['email', 'announcements', { limit: 3 }],
+    queryFn: () => emailService.getAnnouncements({ limit: 3, sort: 'recent' }),
+    staleTime: 60_000,
+    enabled: true
+  });
 
   const saveMutation = useSaveNotice();
   const unsaveMutation = useUnsaveNotice();
@@ -295,6 +304,69 @@ export function StudentDashboard() {
                     </span>
                   </span>
                   <Link to={ROUTES.STUDENT_MY_NOTICES} className="text-body-sm text-accent hover:underline flex-shrink-0">Open</Link>
+                </li>
+              );
+            })}
+          </ul>
+        )}
+      </section>
+
+      {/* Recent email announcements */}
+      <section aria-labelledby="email-announcements-heading">
+        <div className="flex items-center justify-between mb-4">
+          <h2 id="email-announcements-heading" className="text-h3 font-semibold text-text">From Your Inbox</h2>
+          <Link to={ROUTES.STUDENT_ANNOUNCEMENTS} className="text-body-sm text-accent hover:underline inline-flex items-center gap-1">
+            View all <ChevronRight className="w-4 h-4" aria-hidden="true" />
+          </Link>
+        </div>
+
+        {emailAnnouncementsQuery.isError ? (
+          <div className="flex items-center gap-3 p-4 bg-bg-elevated border border-border rounded-lg text-body-sm text-text-muted">
+            <Mail className="w-5 h-5" aria-hidden="true" />
+            Could not load inbox announcements.
+          </div>
+        ) : emailAnnouncementsQuery.isLoading ? (
+          <div className="space-y-2">{Array.from({ length: 2 }).map((_, i) => <div key={i} className="h-16 bg-border/40 rounded-md skeleton-shimmer" />)}</div>
+        ) : (emailAnnouncementsQuery.data?.data ?? []).length === 0 ? (
+          <div className="flex items-center gap-3 p-4 bg-bg-elevated border border-border rounded-lg text-body-sm text-text-muted">
+            <Mail className="w-5 h-5" aria-hidden="true" />
+            <span>
+              No inbox announcements yet.{' '}
+              <Link to={ROUTES.STUDENT_GMAIL_CONNECT} className="text-accent hover:underline font-medium">
+                Connect Gmail
+              </Link>
+              to start discovering opportunities from your inbox.
+            </span>
+          </div>
+        ) : (
+          <ul className="bg-bg-elevated border border-border rounded-lg divide-y divide-border">
+            {(emailAnnouncementsQuery.data?.data ?? []).map((announcement: EmailAnnouncement) => {
+              const deadline = announcement.important_dates?.applicationDeadline?.normalizedDate
+                ? announcement.important_dates.applicationDeadline.normalizedDate.slice(0, 10)
+                : null;
+              return (
+                <li key={announcement.id} className="p-4 flex items-center justify-between gap-3">
+                  <div className="min-w-0 flex-1">
+                    <div className="flex flex-wrap items-center gap-2 mb-1">
+                      <Badge variant="info" size="sm">
+                        {NOTICE_CATEGORY_LABELS[announcement.primary_category.toUpperCase() as keyof typeof NOTICE_CATEGORY_LABELS] ?? announcement.primary_category}
+                      </Badge>
+                      {announcement.extraction_confidence != null && (
+                        <span className="text-caption text-text-muted">AI {Math.round(announcement.extraction_confidence * 100)}%</span>
+                      )}
+                    </div>
+                    <span className="block text-body font-medium text-text truncate">{announcement.title}</span>
+                    <span className="mt-0.5 flex items-center gap-2">
+                      {announcement.organization_name && <span className="text-caption text-text-muted">{announcement.organization_name}</span>}
+                      {deadline && (
+                        <>
+                          <span className="text-caption text-text-muted">·</span>
+                          <span className="text-caption text-text-muted">Deadline {deadline}</span>
+                        </>
+                      )}
+                    </span>
+                  </div>
+                  <Link to={ROUTES.STUDENT_ANNOUNCEMENT_DETAIL(announcement.id)} className="text-body-sm text-accent hover:underline flex-shrink-0">Open</Link>
                 </li>
               );
             })}

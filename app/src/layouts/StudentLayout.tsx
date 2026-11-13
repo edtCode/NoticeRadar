@@ -1,7 +1,7 @@
 import { useState, type ReactNode } from 'react';
 import { Outlet, Link, useLocation, NavLink, useNavigate } from 'react-router-dom';
 import { cn } from '../utils/helpers';
-import { Menu, X, Bell, User, LogOut, ChevronLeft, ChevronRight, ChevronDown, Search, Bookmark, Calendar, HelpCircle, FileText, Clock, Archive, FilePlus2 } from 'lucide-react';
+import { Menu, X, Bell, User, LogOut, ChevronLeft, ChevronRight, ChevronDown, Search, Bookmark, Calendar, HelpCircle, FileText, Clock, Archive, FilePlus2, Mail } from 'lucide-react';
 import { useAuthStore } from '../stores/authStore';
 import { useUIStore } from '../stores/uiStore';
 import { Button } from '../components/ui';
@@ -19,6 +19,7 @@ const STUDENT_SIDEBAR_ITEMS: SidebarItem[] = [
   { label: 'Saved Notices', href: '/student/saved', icon: <Bookmark className="w-5 h-5" /> },
   { label: 'Deadlines', href: '/student/calendar', icon: <Calendar className="w-5 h-5" /> },
   { label: 'Search Notices', href: '/student/search', icon: <Search className="w-5 h-5" /> },
+  { label: 'Gmail Connect', href: '/student/gmail-connect', icon: <Mail className="w-5 h-5" /> },
 ] as const;
 
 const STUDENT_SIDEBAR_PERSONAL: SidebarItem[] = [

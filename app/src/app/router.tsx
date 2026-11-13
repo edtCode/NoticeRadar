@@ -93,6 +93,9 @@ import { NotificationsPage } from '../pages/student/NotificationsPage';
 import { StudentProfilePage } from '../pages/student/StudentProfilePage';
 import { MyNoticesPage } from '../pages/student/MyNoticesPage';
 import { HelpPage } from '../pages/student/HelpPage';
+import { GmailConnectPage } from '../pages/student/GmailConnectPage';
+import { AnnouncementsPage } from '../pages/student/AnnouncementsPage';
+import { AnnouncementDetailPage } from '../pages/student/AnnouncementDetailPage';
 import { AdminDashboard } from '../pages/admin/AdminDashboard';
 import { AdminNoticesPage } from '../pages/admin/AdminNoticesPage';
 import { AdminUploadPage } from '../pages/admin/AdminUploadPage';
@@ -140,6 +143,9 @@ export function AppRouter() {
           <Route path="/student/notifications" element={<NotificationsPage />} />
           <Route path="/student/profile" element={<StudentProfilePage />} />
           <Route path="/student/help" element={<HelpPage />} />
+          <Route path="/student/gmail-connect" element={<GmailConnectPage />} />
+          <Route path="/student/announcements" element={<AnnouncementsPage />} />
+          <Route path="/student/announcements/:id" element={<AnnouncementDetailPage />} />
           </Route>
         </Route>
       </Route>
