@@ -22,6 +22,18 @@ export function VerifyEmailPage() {
           <ArrowLeft className="w-4 h-4" />
           Return to login
         </Link>
+
+        <p className="mt-6 text-body-sm text-text-muted">
+          By creating an account you agree to our{' '}
+          <Link to={ROUTES.TERMS} className="text-text-muted underline underline-offset-4 hover:text-text">
+            Terms of Service
+          </Link>{' '}
+          and{' '}
+          <Link to={ROUTES.PRIVACY} className="text-text-muted underline underline-offset-4 hover:text-text">
+            Privacy Policy
+          </Link>
+          .
+        </p>
       </div>
     </div>
   );

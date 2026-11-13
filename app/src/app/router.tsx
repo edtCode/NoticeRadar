@@ -79,6 +79,8 @@ import { AccessDeniedPage, NotFoundPage, ServerErrorPage } from '../pages/public
 import { LandingPage } from '../pages/public/LandingPage';
 import { FeaturesPage } from '../pages/public/FeaturesPage';
 import { HowItWorksPage } from '../pages/public/HowItWorksPage';
+import { PrivacyPolicyPage } from '../pages/public/PrivacyPolicyPage';
+import { TermsPage } from '../pages/public/TermsPage';
 import { LoginPage } from '../pages/auth/LoginPage';
 import { RegisterPage } from '../pages/auth/RegisterPage';
 import { VerifyEmailPage } from '../pages/auth/VerifyEmailPage';
@@ -116,6 +118,10 @@ export function AppRouter() {
         <Route path="/" element={<LandingPage />} />
         <Route path="/features" element={<FeaturesPage />} />
         <Route path="/how-it-works" element={<HowItWorksPage />} />
+        <Route path="/privacy-policy" element={<PrivacyPolicyPage />} />
+        <Route path="/terms" element={<TermsPage />} />
+        {/* Legacy path kept as a permanent redirect so old links keep working. */}
+        <Route path="/privacy" element={<Navigate to="/privacy-policy" replace />} />
       </Route>
 
       {/* Auth */}

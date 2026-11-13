@@ -202,6 +202,26 @@ export function StudentLayout() {
               </button>
             ))}
           </div>
+
+          {/* Legal */}
+          <div className="mt-4 border-t border-border pt-3">
+            {!sidebarCollapsed && (
+              <div className="flex flex-wrap gap-x-4 gap-y-1 px-3">
+                <Link
+                  to="/privacy-policy"
+                  className="text-caption text-text-muted transition-colors hover:text-text"
+                >
+                  Privacy Policy
+                </Link>
+                <Link
+                  to="/terms"
+                  className="text-caption text-text-muted transition-colors hover:text-text"
+                >
+                  Terms of Service
+                </Link>
+              </div>
+            )}
+          </div>
         </nav>
 
         {/* Collapsed Toggle */}

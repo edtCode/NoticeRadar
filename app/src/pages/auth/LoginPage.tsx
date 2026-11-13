@@ -107,6 +107,18 @@ export function LoginPage() {
             </Link>
           </p>
         </form>
+
+        <p className="mt-6 text-center text-body-sm text-text-muted">
+          By signing in you agree to our{' '}
+          <Link to={ROUTES.TERMS} className="text-text-muted underline underline-offset-4 hover:text-text">
+            Terms of Service
+          </Link>{' '}
+          and{' '}
+          <Link to={ROUTES.PRIVACY} className="text-text-muted underline underline-offset-4 hover:text-text">
+            Privacy Policy
+          </Link>
+          .
+        </p>
       </div>
     </div>
   );

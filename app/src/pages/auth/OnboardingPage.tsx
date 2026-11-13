@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -8,7 +8,7 @@ import { Input, Select } from '../../components/ui/Input';
 import { SectionHeader } from '../../components/common/PageHeader';
 import { InstitutionAutocomplete } from '../../components/common/InstitutionAutocomplete';
 import { useStudentProfile, useCreateStudentProfile } from '../../hooks/useAuthService';
-import { INTEREST_OPTIONS, BRANCH_OPTIONS, SEMESTER_OPTIONS } from '../../constants';
+import { INTEREST_OPTIONS, BRANCH_OPTIONS, SEMESTER_OPTIONS, ROUTES } from '../../constants';
 import type { InstitutionSearchResult, StudentProfileResponse } from '../../types';
 import { cn } from '../../utils/helpers';
 
@@ -371,6 +371,18 @@ export function OnboardingPage() {
           )}
         </div>
       </form>
+
+      <p className="mt-6 text-center text-body-sm text-text-muted">
+        By completing your profile you agree to our{' '}
+        <Link to={ROUTES.TERMS} className="text-text-muted underline underline-offset-4 hover:text-text">
+          Terms of Service
+        </Link>{' '}
+        and{' '}
+        <Link to={ROUTES.PRIVACY} className="text-text-muted underline underline-offset-4 hover:text-text">
+          Privacy Policy
+        </Link>
+        .
+      </p>
     </div>
   );
 }

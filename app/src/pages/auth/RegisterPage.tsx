@@ -186,7 +186,9 @@ export function RegisterPage() {
               />
               <span className="text-body-sm text-text-muted">
                 I agree to the{' '}
-                <Link to="/terms" className="text-accent hover:underline">Terms and Conditions</Link>
+                <Link to={ROUTES.TERMS} className="text-accent hover:underline">Terms of Service</Link>
+                {' '}and the{' '}
+                <Link to={ROUTES.PRIVACY} className="text-accent hover:underline">Privacy Policy</Link>
               </span>
             </label>
             {errors.acceptTerms && <p className="mt-1 text-body-sm text-danger" role="alert">{errors.acceptTerms.message}</p>}

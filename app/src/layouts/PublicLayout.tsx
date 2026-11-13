@@ -45,7 +45,7 @@ function SiteFooter() {
           <nav aria-label="Legal links">
             <h4 className="mb-3 text-body-sm font-semibold text-text">Legal</h4>
             <ul className="space-y-2">
-              <li><Link to="/privacy" className="text-body-sm text-text-muted transition-colors hover:text-text">Privacy Policy</Link></li>
+              <li><Link to="/privacy-policy" className="text-body-sm text-text-muted transition-colors hover:text-text">Privacy Policy</Link></li>
               <li><Link to="/terms" className="text-body-sm text-text-muted transition-colors hover:text-text">Terms of Service</Link></li>
             </ul>
           </nav>

@@ -105,7 +105,7 @@ export function GmailConnectPage() {
   }
 
   const handleDisconnect = async () => {
-    if (!window.confirm('Disconnect your Gmail account? Extracted announcements will remain.')) return;
+    if (!window.confirm('Disconnect your Gmail account? This deletes your stored tokens and the announcements extracted from this mailbox.')) return;
     try {
       await emailService.disconnectGmail();
       setStatus({ connected: false, emailAddress: null, loading: false });

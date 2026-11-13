@@ -29,11 +29,18 @@ export const API_BASE_URL = withApiPrefix(RAW_API_BASE_URL);
 export const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL || '';
 export const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY || '';
 
+// Legal pages. The contact address and effective date are kept here so both
+// documents and the footer stay in sync.
+export const LEGAL_CONTACT_EMAIL = 'noshivam19@gmail.com';
+export const LEGAL_LAST_UPDATED = '13 November 2026';
+
 export const ROUTES = {
   // Public
   HOME: '/',
   FEATURES: '/features',
   HOW_IT_WORKS: '/how-it-works',
+  PRIVACY: '/privacy-policy',
+  TERMS: '/terms',
   LOGIN: '/login',
   REGISTER: '/register',
   VERIFY_EMAIL: '/verify-email',
