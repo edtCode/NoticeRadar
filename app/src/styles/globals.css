@@ -286,9 +286,9 @@
   /* Hero bloom — soft colour fields behind the hero */
   .hero-bloom {
     background:
-      radial-gradient(560px 360px at 12% 8%, color-mix(in oklab, var(--color-loud) 22%, transparent), transparent 70%),
-      radial-gradient(620px 420px at 88% 14%, color-mix(in oklab, var(--color-coral) 14%, transparent), transparent 70%),
-      radial-gradient(720px 520px at 70% 88%, color-mix(in oklab, var(--color-accent) 10%, transparent), transparent 72%);
+      radial-gradient(900px 600px at 12% 8%, color-mix(in oklab, var(--color-loud) 28%, transparent), transparent 75%),
+      radial-gradient(1000px 700px at 88% 14%, color-mix(in oklab, var(--color-coral) 18%, transparent), transparent 75%),
+      radial-gradient(1100px 800px at 70% 88%, color-mix(in oklab, var(--color-accent) 14%, transparent), transparent 78%);
   }
   @keyframes nr-bloom-float {
     0%, 100% { background-position: 0% 0%, 100% 0%, 70% 100%; }
