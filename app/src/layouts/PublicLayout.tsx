@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { Outlet, Link, useLocation } from 'react-router-dom';
 import { cn } from '../utils/helpers';
 import { Menu, X } from 'lucide-react';
+import { OpporaLogo } from '../components/brand';
 
 const PUBLIC_NAV_LINKS = [
   { label: 'Features', href: '/features' },
@@ -17,12 +18,8 @@ function SiteFooter() {
       <div className="mx-auto max-w-[1400px] px-4 py-12 sm:px-6 lg:px-8">
         <div className="grid gap-10 md:grid-cols-[1.3fr_0.8fr_0.8fr_0.8fr]">
           <div className="space-y-4">
-            <Link to="/" className="flex items-center gap-2 text-h3 font-semibold text-text" aria-label="NoticeRadar Home">
-              <svg className="h-8 w-8 text-accent" viewBox="0 0 32 32" fill="none" aria-hidden="true">
-                <circle cx="16" cy="16" r="14" stroke="currentColor" strokeWidth="2" />
-                <path d="M16 8v8l5 5" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
-              </svg>
-              <span>NoticeRadar</span>
+            <Link to="/" aria-label="Oppora Home">
+              <OpporaLogo size="md" />
             </Link>
             <p className="max-w-xs text-body-sm text-text-muted">
               Your college updates, all in one place.
@@ -56,7 +53,7 @@ function SiteFooter() {
 
         <div className="mt-10 flex flex-col gap-6 border-t border-border pt-6 sm:flex-row sm:items-center sm:justify-between">
           <p className="text-body-sm text-text-muted">
-            © {new Date().getFullYear()} NoticeRadar. All rights reserved.
+            © {new Date().getFullYear()} Oppora. All rights reserved.
           </p>
 
           <div className="flex flex-wrap items-center gap-3">
@@ -84,12 +81,8 @@ export function PublicLayout() {
         <div className="mx-auto max-w-[1400px] px-4 sm:px-6 lg:px-8">
           <div className="flex h-16 items-center justify-between">
             {/* Logo */}
-            <Link to="/" className="flex items-center gap-2 text-h3 font-semibold text-text" aria-label="NoticeRadar Home">
-              <svg className="w-8 h-8 text-accent" viewBox="0 0 32 32" fill="none" aria-hidden="true">
-                <circle cx="16" cy="16" r="14" stroke="currentColor" strokeWidth="2" />
-                <path d="M16 8v8l5 5" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
-              </svg>
-              <span>NoticeRadar</span>
+            <Link to="/" aria-label="Oppora Home">
+              <OpporaLogo size="md" />
             </Link>
 
             {/* Desktop Navigation */}

@@ -17,7 +17,7 @@ const MAX_ATTEMPTS = 3;
 // ---------------------------------------------------------------------------
 
 const SYSTEM_PROMPT = `
-You are an expert email intelligence engine for NoticeRadar, a platform that
+You are an expert email intelligence engine for Oppora, a platform that
 helps college students discover opportunities from their Gmail inbox.
 
 Your job: read ONE authorized Gmail message and return a single JSON object

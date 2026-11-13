@@ -123,7 +123,7 @@ export function GmailConnectPage() {
           <h1 className="text-h2 font-semibold text-text">Connect Gmail</h1>
         </div>
         <p className="text-body text-text-muted">
-          NoticeRadar reads your authorized Gmail messages, identifies
+          Oppora reads your authorized Gmail messages, identifies
           announcements (internships, placements, hackathons, scholarships,
           events and more), and turns them into structured opportunities on
           your dashboard.
@@ -170,7 +170,7 @@ export function GmailConnectPage() {
               </Button>
               <p className="text-caption text-text-muted">
                 You will be asked to grant read-only access to your Gmail.
-                NoticeRadar never sends email on your behalf.
+                Oppora never sends email on your behalf.
               </p>
             </>
           )}

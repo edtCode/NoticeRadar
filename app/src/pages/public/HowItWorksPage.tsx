@@ -19,7 +19,7 @@ const STEPS = [
   {
     icon: Zap,
     step: 3,
-    title: 'NoticeRadar extracts and structures relevant information',
+    title: 'Oppora extracts and structures relevant information',
     description: 'The PDF is read page by page, and the configured AI provider extracts titles, categories, deadlines, eligibility criteria, required documents and application links — every field with its supporting quote and page number.',
     actor: 'System',
   },
@@ -43,7 +43,7 @@ export function HowItWorksPage() {
   return (
     <div className="mx-auto max-w-[900px] px-4 sm:px-6 lg:px-8 py-16 sm:py-24">
       <header className="text-center mb-16">
-        <h1 className="text-display font-semibold text-text mb-4">How NoticeRadar Works</h1>
+        <h1 className="text-display font-semibold text-text mb-4">How Oppora Works</h1>
         <p className="text-body text-text-muted">
           One verified pipeline: official PDF in, trusted personalised notice out. A human approves everything before students see it.
         </p>

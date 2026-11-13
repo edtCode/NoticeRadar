@@ -17,13 +17,13 @@ React 19 + TypeScript + Vite + Tailwind CSS v4 + React Router v7 + TanStack Quer
 
 ## Product Purpose
 
-NoticeRadar turns scattered, long official college notices into a personalised, verifiable feed. Students discover published notices, read an AI-assisted summary and a rule-based eligibility assessment computed by the backend, save opportunities and track deadlines. Administrators upload official PDFs, run text and AI extraction, inspect the evidence behind every extracted field, correct it, approve it and publish it.
+Oppora turns scattered, long official college notices into a personalised, verifiable feed. Students discover published notices, read an AI-assisted summary and a rule-based eligibility assessment computed by the backend, save opportunities and track deadlines. Administrators upload official PDFs, run text and AI extraction, inspect the evidence behind every extracted field, correct it, approve it and publish it.
 
 Success: a student can answer "what applies to me and what closes soon?" in under a minute; an administrator can publish a verified notice without re-typing the PDF and without ever bypassing review.
 
 ## Positioning
 
-Not a scraper, not a chatbot, not another WhatsApp group. NoticeRadar is an institution-controlled notice intelligence pipeline whose eligibility verdicts are transparent rules (with reasons and missing fields), whose AI output is always shown next to the source text it came from, and whose publication is gated on human approval. The unit of trust is the verified notice, not a generated answer.
+Not a scraper, not a chatbot, not another WhatsApp group. Oppora is an institution-controlled notice intelligence pipeline whose eligibility verdicts are transparent rules (with reasons and missing fields), whose AI output is always shown next to the source text it came from, and whose publication is gated on human approval. The unit of trust is the verified notice, not a generated answer.
 
 ## Operating Context
 
@@ -58,7 +58,7 @@ Constraints:
 
 ## Brand Commitments
 
-- Name: **NoticeRadar**.
+- Name: **Oppora**.
 - Voice: quiet, precise, institutional, candid. Plain verbs. No hype, no "AI magic", no fake urgency.
 - Core vocabulary: signal, notice, notice board, verified, published, eligibility, deadline, evidence, official.
 - Honesty commitments: AI summaries are labelled "AI-assisted — verify important details against the official notice"; rule-based eligibility carries its disclaimer wherever a verdict appears; demo data, when enabled, is visibly marked as demo.

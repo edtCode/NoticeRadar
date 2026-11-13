@@ -1,5 +1,6 @@
 import { Link, useNavigate } from 'react-router-dom';
 import { ContainerScroll } from '../../components/ui';
+import { OpporaMark } from '../../components/brand';
 import { FeatureOrbitCarousel, type Feature } from '../../components/ui/feature-orbit-carousel';
 import { ArrowRight, Search, Bell, Bookmark, Calendar, Home, ChevronRight, LayoutGrid, LayoutTemplate, Users } from 'lucide-react';
 
@@ -59,7 +60,7 @@ const FEATURE_ITEMS: Feature[] = [
     audience: 'For administrators',
     context: 'PDF to structured data',
     description:
-      'Upload a PDF and NoticeRadar extracts deadlines, eligibility, documents and a summary — with the original source always visible.',
+      'Upload a PDF and Oppora extracts deadlines, eligibility, documents and a summary — with the original source always visible.',
     capabilities: ['PDF parsing', 'AI summary', 'Deadline extraction', 'Original source'],
     saves: 1960,
     accent: '#caaf90',
@@ -110,7 +111,7 @@ const HOW_IT_WORKS = [
   {
     step: 3,
     title: 'AI Extracts & Structures Information',
-    description: 'NoticeRadar extracts text from the PDF and uses AI to structure key fields: title, category, deadline, eligibility criteria, required documents, and more.',
+    description: 'Oppora extracts text from the PDF and uses AI to structure key fields: title, category, deadline, eligibility criteria, required documents, and more.',
   },
   {
     step: 4,
@@ -143,10 +144,8 @@ function HeroPreview() {
       {/* Sidebar */}
       <aside className="hidden w-[240px] shrink-0 flex-col gap-1 border-r border-border bg-bg-elevated p-3 sm:flex">
         <div className="mb-3 flex items-center gap-2 px-2 py-1">
-          <span className="flex h-6 w-6 items-center justify-center rounded-md bg-accent text-loud-ink">
-            <Bell className="h-3.5 w-3.5" aria-hidden="true" />
-          </span>
-          <span className="font-display text-body font-bold tracking-tight text-text">NoticeRadar</span>
+          <OpporaMark size="sm" />
+          <span className="font-display text-body font-bold tracking-tight text-text">Oppora</span>
         </div>
 
         <div className="mb-2 flex items-center justify-between rounded-md border border-border bg-bg px-2.5 py-1.5 text-text-muted">
@@ -194,10 +193,8 @@ function HeroPreview() {
       <div className="flex min-w-0 flex-1 flex-col">
         <div className="flex items-center justify-between border-b border-border px-4 py-2.5">
           <div className="flex items-center gap-2 sm:hidden">
-            <span className="flex h-5 w-5 items-center justify-center rounded bg-accent text-loud-ink">
-              <Bell className="h-3 w-3" aria-hidden="true" />
-            </span>
-            <span className="font-display text-body-sm font-bold text-text">NoticeRadar</span>
+            <OpporaMark size="sm" />
+            <span className="font-display text-body-sm font-bold text-text">Oppora</span>
           </div>
           <div className="hidden h-2.5 w-28 rounded-full bg-bg-hover sm:block" />
           <div className="flex items-center gap-3">

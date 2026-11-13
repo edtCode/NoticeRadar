@@ -7,7 +7,7 @@ validateEnv();
 const app = createApp();
 
 app.listen(env.port, () => {
-    console.log(`NoticeRadar API listening on port ${env.port}`);
+    console.log(`Oppora API listening on port ${env.port}`);
 });
 
 startScheduler();

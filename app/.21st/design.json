@@ -1,7 +1,7 @@
 {
   "version": 1,
   "project": {
-    "name": "noticeradar-frontend",
+    "name": "oppora-frontend",
     "productType": null,
     "stack": [
       "react",

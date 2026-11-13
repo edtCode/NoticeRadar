@@ -110,7 +110,7 @@ export function CalendarPage() {
           <Bell className="w-4 h-4 text-accent" aria-hidden="true" /> Automatic reminders
         </div>
         <span className="text-body-sm text-text-muted">
-          NoticeRadar reminds you <strong className="text-text">7 days</strong>, <strong className="text-text">3 days</strong> and <strong className="text-text">1 day</strong> before each deadline for notices you are eligible or possibly eligible for. Reminders are sent automatically by the system and cannot currently be customised.
+          Oppora reminds you <strong className="text-text">7 days</strong>, <strong className="text-text">3 days</strong> and <strong className="text-text">1 day</strong> before each deadline for notices you are eligible or possibly eligible for. Reminders are sent automatically by the system and cannot currently be customised.
         </span>
       </section>
 

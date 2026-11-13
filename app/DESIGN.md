@@ -1,4 +1,4 @@
-# DESIGN.md — NoticeRadar · "Signal" visual system (v2 · full rebuild)
+# DESIGN.md — Oppora · "Signal" visual system (v2 · full rebuild)
 
 > This is a ground-up rebuild. The previous quiet-green administrative system
 > is retired. Every value below is a fresh position, NOT an evolution.

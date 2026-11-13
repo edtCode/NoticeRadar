@@ -4,6 +4,7 @@ import { cn } from '../utils/helpers';
 import { Menu, X, Bell, User, LogOut, ChevronLeft, ChevronRight, ChevronDown, Search, FileText, ClipboardList, Archive, Settings, Upload, Plus, Home, Clock, Shield, Users, BarChart2 } from 'lucide-react';
 import { useAuthStore } from '../stores/authStore';
 import { useUIStore } from '../stores/uiStore';
+import { OpporaMark } from '../components/brand';
 import { Button } from '../components/ui';
 import { Avatar } from '../components/ui';
 import { ToastContainer } from '../components/ui';
@@ -70,12 +71,13 @@ export function AdminLayout() {
       >
         {/* Logo */}
         <div className={cn('flex h-16 items-center justify-between px-4 border-b border-border', sidebarCollapsed && 'justify-center')}>
-          <Link to="/admin/dashboard" className="flex items-center gap-2 text-h3 font-semibold text-text" aria-label="NoticeRadar Admin Home">
-            <svg className="w-8 h-8 text-accent flex-shrink-0" viewBox="0 0 32 32" fill="none" aria-hidden="true">
-              <circle cx="16" cy="16" r="14" stroke="currentColor" strokeWidth="2" />
-              <path d="M16 8v8l5 5" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
-            </svg>
-            {!sidebarCollapsed && <span>NoticeRadar Admin</span>}
+          <Link to="/admin/dashboard" className="flex items-center gap-2" aria-label="Oppora Admin Home">
+            <OpporaMark size="md" />
+            {!sidebarCollapsed && (
+              <span className="truncate font-display text-h3 font-bold tracking-[-0.03em] text-text">
+                Oppora Admin
+              </span>
+            )}
           </Link>
           {!sidebarCollapsed && (
             <button

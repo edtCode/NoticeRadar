@@ -1,4 +1,4 @@
-# NoticeRadar
+# Oppora
 
 Turn official college notices into one personalised, verified feed.
 
@@ -73,7 +73,7 @@ to your own Resend account address).
 | Variable | Example | Notes |
 | --- | --- | --- |
 | `RESEND_API_KEY` | `re_...` | Enables the Resend path; omit to fall back to Supabase |
-| `MAIL_FROM` | `NoticeRadar <no-reply@yourdomain.com>` | Must use a verified domain |
+| `MAIL_FROM` | `Oppora <no-reply@yourdomain.com>` | Must use a verified domain |
 | `MAIL_REPLY_TO` | `support@yourdomain.com` | Optional |
 | `APP_URL` | `https://notice-radar-six.vercel.app` | Frontend base for confirmation links |
 

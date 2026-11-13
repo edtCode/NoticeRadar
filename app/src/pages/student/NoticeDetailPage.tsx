@@ -195,7 +195,7 @@ export function NoticeDetailPage() {
           <h2 id="docs-heading" className="flex items-center gap-2 text-h4 font-semibold text-text mb-4">
             <ClipboardList className="w-5 h-5" aria-hidden="true" /> Required Documents
           </h2>
-          <p className="text-caption text-text-muted mb-3">A checklist of what the notice asks applicants to carry. Nothing here is tracked by NoticeRadar — use it as information.</p>
+          <p className="text-caption text-text-muted mb-3">A checklist of what the notice asks applicants to carry. Nothing here is tracked by Oppora — use it as information.</p>
           <ul className="space-y-2">
             {notice.required_documents.map((doc, i) => (
               <li key={i} className="flex items-start gap-2.5 p-2.5 bg-bg rounded-sm">

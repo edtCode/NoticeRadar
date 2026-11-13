@@ -8,6 +8,7 @@ import { Input } from '../../components/ui/Input';
 import { useLogin } from '../../hooks/useAuthService';
 import { useAuthStore } from '../../stores/authStore';
 import { ROUTES } from '../../constants';
+import { OpporaMark } from '../../components/brand';
 
 const loginSchema = z.object({
   email: z.string().min(1, 'Email is required').email('Enter a valid email address'),
@@ -46,14 +47,11 @@ export function LoginPage() {
     <div className="min-h-screen flex flex-col justify-center py-12 px-4 sm:px-6">
       <div className="mx-auto w-full max-w-md">
         <div className="text-center mb-8">
-          <Link to="/" className="inline-flex items-center gap-2 mb-6" aria-label="NoticeRadar Home">
-            <svg className="w-10 h-10 text-accent" viewBox="0 0 32 32" fill="none" aria-hidden="true">
-              <circle cx="16" cy="16" r="14" stroke="currentColor" strokeWidth="2" />
-              <path d="M16 8v8l5 5" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
-            </svg>
+          <Link to="/" className="inline-flex items-center gap-2 mb-6" aria-label="Oppora Home">
+            <OpporaMark size="lg" />
           </Link>
           <h1 className="text-h1 font-semibold text-text">Welcome back</h1>
-          <p className="text-body text-text-muted mt-1">Sign in to your NoticeRadar account</p>
+          <p className="text-body text-text-muted mt-1">Sign in to your Oppora account</p>
         </div>
 
         <form onSubmit={handleSubmit(onSubmit)} className="bg-bg-elevated border border-border rounded-lg p-6 space-y-4" noValidate>

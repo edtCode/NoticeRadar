@@ -21,9 +21,9 @@ console.log(`Sending test email from "${env.mail.from}" to ${to}...`);
 try {
     const result = await sendMail({
         to,
-        subject: "NoticeRadar email test",
-        html: "<p>This is a test email from the NoticeRadar backend. Resend delivery is working.</p>",
-        text: "This is a test email from the NoticeRadar backend. Resend delivery is working."
+        subject: "Oppora email test",
+        html: "<p>This is a test email from the Oppora backend. Resend delivery is working.</p>",
+        text: "This is a test email from the Oppora backend. Resend delivery is working."
     });
 
     console.log(`Sent. Resend id: ${result?.id ?? "unknown"}`);

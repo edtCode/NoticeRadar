@@ -1,6 +1,6 @@
 // Application constants
 
-export const APP_NAME = 'NoticeRadar';
+export const APP_NAME = 'Oppora';
 export const APP_DESCRIPTION = 'Never miss an important college notice again';
 
 // Production builds must never point at localhost: a deployed site whose env

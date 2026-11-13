@@ -15,7 +15,7 @@ function Providers() {
   const toasts = useUIStore((s) => s.toasts);
   const removeToast = useUIStore((s) => s.removeToast);
 
-  // NoticeRadar is a dark-mode product: always render the dark canvas.
+  // Oppora is a dark-mode product: always render the dark canvas.
   useEffect(() => {
     document.documentElement.classList.add('dark');
     document.documentElement.style.colorScheme = 'dark';

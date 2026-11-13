@@ -1,9 +1,9 @@
 {
-  "name": "noticeradar-backend",
+  "name": "oppora-backend",
   "version": "1.0.0",
   "private": true,
   "type": "module",
-  "description": "NoticeRadar backend API built with Express and Supabase",
+  "description": "Oppora backend API built with Express and Supabase",
   "engines": {
     "node": ">=20"
   },

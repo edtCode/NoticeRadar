@@ -9,6 +9,7 @@ import { Avatar } from '../components/ui';
 import { Dropdown, DropdownItem } from '../components/ui';
 import { ToastContainer } from '../components/ui';
 import { useNotificationService } from '../hooks/useNotificationService';
+import { OpporaLogo } from '../components/brand';
 
 type SidebarItem = { label: string; href: string; icon: ReactNode; isLogout?: boolean };
 
@@ -86,12 +87,8 @@ export function StudentLayout() {
       >
         {/* Logo */}
         <div className={cn('flex h-16 items-center justify-between px-4 border-b border-border', sidebarCollapsed && 'justify-center')}>
-          <Link to="/student/dashboard" className="flex items-center gap-2 text-h3 font-semibold text-text" aria-label="NoticeRadar Home">
-            <svg className="w-8 h-8 text-accent flex-shrink-0" viewBox="0 0 32 32" fill="none" aria-hidden="true">
-              <circle cx="16" cy="16" r="14" stroke="currentColor" strokeWidth="2" />
-              <path d="M16 8v8l5 5" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
-            </svg>
-            {!sidebarCollapsed && <span>NoticeRadar</span>}
+          <Link to="/student/dashboard" aria-label="Oppora Home">
+            <OpporaLogo size="md" markOnly={sidebarCollapsed} />
           </Link>
           {!sidebarCollapsed && (
             <button

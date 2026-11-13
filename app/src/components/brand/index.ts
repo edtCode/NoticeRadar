@@ -1,0 +1,1 @@
+export { OpporaLogo, OpporaMark } from './Logo';

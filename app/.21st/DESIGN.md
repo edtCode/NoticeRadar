@@ -5,7 +5,7 @@ Generated from project sources at 2026-11-10T19:10:44.797Z.
 
 ## Project
 
-- Name: noticeradar-frontend
+- Name: oppora-frontend
 - Product type: Unknown
 - Stack: react, tailwind-v4, vite
 - Color mode: unknown

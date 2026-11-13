@@ -4,7 +4,7 @@ import { HelpCircle, ChevronRight, Mail } from 'lucide-react';
 
 const FAQS = [
   {
-    q: 'How does NoticeRadar decide "what applies to me"?',
+    q: 'How does Oppora decide "what applies to me"?',
     a: 'Your dashboard feed uses rules over your academic profile — branch, current semester, CPI, graduation year and active backlogs — matched against the requirements each notice declares. Every notice shows which requirements matched, which did not, and which fields were missing. It is a transparent rule engine, not a hidden score.',
   },
   {
@@ -13,7 +13,7 @@ const FAQS = [
   },
   {
     q: 'How do the AI summaries work?',
-    a: 'When an administrator uploads an official PDF, NoticeRadar extracts its text and asks the configured AI provider to pull out structured fields: deadlines, eligibility criteria, documents and more. The summary beside each notice comes from that extraction — always verify important details against the original notice.',
+    a: 'When an administrator uploads an official PDF, Oppora extracts its text and asks the configured AI provider to pull out structured fields: deadlines, eligibility criteria, documents and more. The summary beside each notice comes from that extraction — always verify important details against the original notice.',
   },
   {
     q: 'How do deadline reminders work?',
@@ -25,7 +25,7 @@ const FAQS = [
   },
   {
     q: 'Who do I contact about something that looks wrong?',
-    a: 'Your institution\'s administrators are responsible for notice content — use the contact channel your institution has provided. NoticeRadar ensures every notice keeps a link back to the original PDF so you can always check the source.',
+    a: 'Your institution\'s administrators are responsible for notice content — use the contact channel your institution has provided. Oppora ensures every notice keeps a link back to the original PDF so you can always check the source.',
   },
   {
     q: 'Why can\'t I see a notice my friend can see?',
@@ -40,7 +40,7 @@ const TOPICS: Array<{ title: string; body: string }> = [
   },
   {
     title: 'How eligibility matching works',
-    body: 'NoticeRadar compares the requirements a notice declares — eligible branches, minimum CPI, semester range, graduation years, backlog requirement — against your profile. Results are Eligible, Not Eligible, or Possibly Eligible, each with reasons and missing fields. Final eligibility always rests with the recruiting organisation or issuing authority.',
+    body: 'Oppora compares the requirements a notice declares — eligible branches, minimum CPI, semester range, graduation years, backlog requirement — against your profile. Results are Eligible, Not Eligible, or Possibly Eligible, each with reasons and missing fields. Final eligibility always rests with the recruiting organisation or issuing authority.',
   },
   {
     title: 'Saving notices',
@@ -56,7 +56,7 @@ const TOPICS: Array<{ title: string; body: string }> = [
   },
   {
     title: 'Contacting your institution',
-    body: 'NoticeRadar carries official notices; administrative questions about a programme, a delay or a correction go to the department or office that issued it. Every notice links back to the original document portal it came from.',
+    body: 'Oppora carries official notices; administrative questions about a programme, a delay or a correction go to the department or office that issued it. Every notice links back to the original document portal it came from.',
   },
 ];
 
@@ -65,7 +65,7 @@ export function HelpPage() {
     <div className="max-w-3xl space-y-10">
       <header>
         <h1 className="text-h1 font-semibold text-text">Help & Support</h1>
-        <p className="text-body text-text-muted mt-1">How NoticeRadar works, and how to get help from your institution.</p>
+        <p className="text-body text-text-muted mt-1">How Oppora works, and how to get help from your institution.</p>
       </header>
 
       <section aria-labelledby="topics-heading">
@@ -101,7 +101,7 @@ export function HelpPage() {
           <div>
             <h2 className="text-h4 font-semibold text-text mb-1">Still need help?</h2>
             <p className="text-body-sm text-text-muted mb-3">
-              For account or notice content questions, reach out through your institution's official support channel. Support tickets inside NoticeRadar are not available yet.
+              For account or notice content questions, reach out through your institution's official support channel. Support tickets inside Oppora are not available yet.
             </p>
             <Link to="/student/dashboard" className="text-body-sm font-medium text-accent hover:underline">Back to dashboard</Link>
           </div>

@@ -19,7 +19,7 @@ export const env = {
         get apiKey() {
             return process.env.RESEND_API_KEY;
         },
-        from: process.env.MAIL_FROM || "NoticeRadar <onboarding@resend.dev>",
+        from: process.env.MAIL_FROM || "Oppora <onboarding@resend.dev>",
         replyTo: process.env.MAIL_REPLY_TO
     },
     maxUploadBytes: 5 * 1024 * 1024,
