@@ -121,7 +121,7 @@ export function LandingPage() {
   return (
     <div className="flex flex-col">
       {/* Hero — the heading block and the product preview share one scroll-driven 3D card reveal */}
-      <section className="relative overflow-hidden">
+      <section className="relative -mt-20 overflow-hidden pt-20">
         <div className="hero-bloom pointer-events-none absolute inset-0" aria-hidden="true" />
         <div className="relative">
           <ContainerScroll
