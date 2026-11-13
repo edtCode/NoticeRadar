@@ -78,7 +78,6 @@ function RoleRedirect() {
 import { AccessDeniedPage, NotFoundPage, ServerErrorPage } from '../pages/public/SystemPages';
 import { LandingPage } from '../pages/public/LandingPage';
 import { FeaturesPage } from '../pages/public/FeaturesPage';
-import { Demo } from '../pages/demo';
 import { HowItWorksPage } from '../pages/public/HowItWorksPage';
 import { PrivacyPolicyPage } from '../pages/public/PrivacyPolicyPage';
 import { TermsPage } from '../pages/public/TermsPage';
@@ -117,7 +116,6 @@ export function AppRouter() {
       {/* Public */}
       <Route element={<PublicLayout />}>
         <Route path="/" element={<LandingPage />} />
-        <Route path="/demo" element={<Demo />} />
         <Route path="/features" element={<FeaturesPage />} />
         <Route path="/how-it-works" element={<HowItWorksPage />} />
         <Route path="/privacy-policy" element={<PrivacyPolicyPage />} />

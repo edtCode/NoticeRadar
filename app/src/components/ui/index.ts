@@ -28,7 +28,6 @@ export { EmptyState, ErrorState, LoadingState } from './States';
 export type { EmptyStateProps, ErrorStateProps, LoadingStateProps } from './States';
 
 export { ContainerScroll, Header, Card } from './ContainerScroll';
-export { Navbar1 } from './navbar-1';
 export { TextWordFlip } from './TextWordFlip';
 export type { TextWordFlipProps } from './TextWordFlip';
 export { Marquee } from './Marquee';

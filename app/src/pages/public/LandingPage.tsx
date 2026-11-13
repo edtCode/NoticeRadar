@@ -1,129 +1,7 @@
-import { Link, useNavigate } from 'react-router-dom';
-import { ContainerScroll } from '../../components/ui';
+import { Link } from 'react-router-dom';
+import { ContainerScroll, FeaturesShowcase } from '../../components/ui';
 import { OpporaMark } from '../../components/brand';
-import { FeatureOrbitCarousel, type Feature } from '../../components/ui/feature-orbit-carousel';
 import { ArrowRight, Search, Bell, Bookmark, Calendar, Home, ChevronRight, LayoutGrid, LayoutTemplate, Users } from 'lucide-react';
-
-/**
- * Self-contained orbit artwork: a dark disc with an accent ring and the
- * feature's line icon at the centre. Square and transparent, so it sits on
- * the orbit like a plate without fetching anything off-origin.
- */
-function featureArt(accent: string, glyph: string): string {
-  const svg =
-    '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">' +
-    '<defs><radialGradient id="g" cx="38%" cy="30%" r="78%">' +
-    '<stop offset="0" stop-color="#2a2214"/><stop offset="1" stop-color="#110d07"/>' +
-    '</radialGradient></defs>' +
-    '<circle cx="256" cy="256" r="244" fill="url(#g)" stroke="' + accent + '" stroke-opacity=".5" stroke-width="3"/>' +
-    '<circle cx="256" cy="256" r="206" fill="none" stroke="#dfc5a2" stroke-opacity=".1" stroke-width="2"/>' +
-    '<circle cx="256" cy="256" r="152" fill="' + accent + '" fill-opacity=".13" stroke="' + accent + '" stroke-opacity=".32" stroke-width="1.5"/>' +
-    '<g transform="translate(256 256) scale(7.2) translate(-12 -12)" fill="none" stroke="#dfc5a2" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round">' +
-    glyph +
-    '</g>' +
-    '</svg>';
-  return 'data:image/svg+xml,' + encodeURIComponent(svg);
-}
-
-const GLYPH_FEED =
-  '<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M16 13H8M16 17H8M10 9H8"/>';
-const GLYPH_AI =
-  '<path d="M12 3l1.8 5.4L19 10.2l-5.2 1.8L12 17.4l-1.8-5.4L5 10.2l5.2-1.8z"/><path d="M19 15l.8 2.2L22 18l-2.2.8L19 21l-.8-2.2L16 18l2.2-.8z"/>';
-const GLYPH_MATCH =
-  '<circle cx="12" cy="12" r="8.5"/><circle cx="12" cy="12" r="4.5"/><circle cx="12" cy="12" r="1" fill="#dfc5a2" stroke="none"/>';
-const GLYPH_BELL =
-  '<path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/>';
-
-const FEATURE_ITEMS: Feature[] = [
-  {
-    title: 'Centralised',
-    subtitle: 'Notice feed',
-    label: 'Centralised notice feed',
-    eyebrow: '#1 Core capability',
-    image: featureArt('#c4f204', GLYPH_FEED),
-    alt: 'Document icon inside a lime-ringed disc',
-    audience: 'For every student',
-    context: 'One searchable feed',
-    description:
-      'Every official notice from your institution lands in a single feed, with filters and saved items so nothing gets lost.',
-    capabilities: ['Search', 'Filters', 'Saved items', 'Categories'],
-    saves: 2480,
-    accent: '#c4f204',
-  },
-  {
-    title: 'AI extraction',
-    subtitle: '& summaries',
-    label: 'AI extraction & summaries',
-    eyebrow: '#2 Core capability',
-    image: featureArt('#caaf90', GLYPH_AI),
-    alt: 'Sparkle icon inside a sand-ringed disc',
-    audience: 'For administrators',
-    context: 'PDF to structured data',
-    description:
-      'Upload a PDF and Oppora extracts deadlines, eligibility, documents and a summary — with the original source always visible.',
-    capabilities: ['PDF parsing', 'AI summary', 'Deadline extraction', 'Original source'],
-    saves: 1960,
-    accent: '#caaf90',
-  },
-  {
-    title: 'Personalised',
-    subtitle: 'Eligibility',
-    label: 'Personalised eligibility',
-    eyebrow: '#3 Core capability',
-    image: featureArt('#86efac', GLYPH_MATCH),
-    alt: 'Target icon inside a green-ringed disc',
-    audience: 'For students',
-    context: 'Verdicts you can trust',
-    description:
-      'Your academic profile powers a tailored feed with transparent verdicts, reasons and missing fields for every notice.',
-    capabilities: ['Profile matching', 'Verdict reasons', 'Missing fields', 'Tailored feed'],
-    saves: 3120,
-    accent: '#86efac',
-  },
-  {
-    title: 'Reminders &',
-    subtitle: 'Verified publishing',
-    label: 'Reminders & verified publishing',
-    eyebrow: '#4 Core capability',
-    image: featureArt('#fcd34d', GLYPH_BELL),
-    alt: 'Bell icon inside an amber-ringed disc',
-    audience: 'Students + admins',
-    context: 'Nothing slips through',
-    description:
-      'Students get automatic deadline reminders while administrators review, correct and approve every notice before it publishes.',
-    capabilities: ['Deadline reminders', 'Admin review', 'Corrections', 'Verified publishing'],
-    saves: 1540,
-    accent: '#fcd34d',
-  },
-];
-
-const HOW_IT_WORKS = [
-  {
-    step: 1,
-    title: 'Register & Complete Profile',
-    description: 'Students sign up and fill in their academic details — institution, department, branch, semester, CPI, graduation year, backlogs, and interests.',
-  },
-  {
-    step: 2,
-    title: 'Admins Upload Official Notices',
-    description: 'Institution administrators upload official PDF notices from departments, placement cells, or the registrar.',
-  },
-  {
-    step: 3,
-    title: 'AI Extracts & Structures Information',
-    description: 'Oppora extracts text from the PDF and uses AI to structure key fields: title, category, deadline, eligibility criteria, required documents, and more.',
-  },
-  {
-    step: 4,
-    title: 'Admin Verifies & Approves',
-    description: 'Administrators review the extracted data side-by-side with the original PDF, correct any errors, and approve the notice for publishing.',
-  },
-  {
-    step: 5,
-    title: 'Students Discover & Track',
-    description: 'Students see personalised feeds with eligibility verdicts, save relevant notices, and receive automatic deadline reminders.',
-  },
-];
 
 const PREVIEW_NAV = [
   { icon: Home, label: 'Home', active: true },
@@ -240,8 +118,6 @@ function HeroPreview() {
 }
 
 export function LandingPage() {
-  const navigate = useNavigate();
-
   return (
     <div className="flex flex-col">
       {/* Hero — the heading block and the product preview share one scroll-driven 3D card reveal */}
@@ -284,15 +160,9 @@ export function LandingPage() {
       </section>
 
 
-      {/* Features — pinned orbit carousel driven by scroll, buttons, keys and swipes */}
+      {/* Features — the same ticker-cell showcase used on /features, demoted to h2 */}
       <section aria-label="Features" className="border-b border-border">
-        <FeatureOrbitCarousel
-          features={FEATURE_ITEMS}
-          height="100svh"
-          loop={false}
-          onPreview={() => navigate('/features')}
-          onGetStarted={() => navigate('/register')}
-        />
+        <FeaturesShowcase headingLevel={2} />
       </section>
 
     </div>

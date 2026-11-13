@@ -1,16 +1,14 @@
-import { type ReactNode } from 'react';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Outlet, Link, useLocation } from 'react-router-dom';
 import { cn } from '../utils/helpers';
 import { Menu, X } from 'lucide-react';
 import { OpporaLogo } from '../components/brand';
+import { ROUTES } from '../constants';
 
 const PUBLIC_NAV_LINKS = [
-  { label: 'Features', href: '/features' },
-  { label: 'How It Works', href: '/how-it-works' },
-  { label: 'About', href: '/about' },
+  { label: 'Features', href: ROUTES.FEATURES },
+  { label: 'How It Works', href: ROUTES.HOW_IT_WORKS },
 ];
-
 
 function SiteFooter() {
   return (
@@ -74,95 +72,132 @@ export function PublicLayout() {
   const location = useLocation();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
+  // A menu left open across a route change would cover the page the visitor
+  // just navigated to, so close it whenever the path changes.
+  useEffect(() => {
+    setMobileMenuOpen(false);
+  }, [location.pathname]);
+
+  useEffect(() => {
+    if (!mobileMenuOpen) {
+      return;
+    }
+
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        setMobileMenuOpen(false);
+      }
+    };
+
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, [mobileMenuOpen]);
+
   return (
     <div className="min-h-screen flex flex-col bg-bg">
-      {/* Top Navigation */}
-      <header className="fixed top-0 left-0 right-0 z-40 bg-bg-elevated/95 backdrop-blur border-b border-border">
-        <div className="mx-auto max-w-[1400px] px-4 sm:px-6 lg:px-8">
-          <div className="flex h-16 items-center justify-between">
-            {/* Logo */}
-            <Link to="/" aria-label="Oppora Home">
-              <OpporaLogo size="md" />
+      {/* Floating navigation pill */}
+      <header className="fixed inset-x-0 top-0 z-40">
+        <div className="mx-auto max-w-[1400px] px-3 sm:px-6 lg:px-8">
+          <div className="mt-3 grid h-14 grid-cols-[1fr_auto_1fr] items-center gap-3 rounded-full border border-border bg-bg-elevated/85 pl-4 pr-2 shadow-[0_20px_50px_-32px_rgba(0,0,0,0.95)] backdrop-blur-xl sm:pl-5 sm:pr-3">
+            <Link
+              to={ROUTES.HOME}
+              aria-label="Oppora home"
+              className="justify-self-start rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-bg"
+            >
+              <OpporaLogo size="sm" />
             </Link>
 
-            {/* Desktop Navigation */}
-            <nav className="hidden md:flex items-center gap-6" aria-label="Main navigation">
-              {PUBLIC_NAV_LINKS.map((link) => (
-                <Link
-                  key={link.href}
-                  to={link.href}
-                  className={cn(
-                    'text-body-sm font-medium transition-colors',
-                    location.pathname === link.href
-                      ? 'text-accent'
-                      : 'text-text-muted hover:text-text'
-                  )}
-                >
-                  {link.label}
-                </Link>
-              ))}
+            <nav className="hidden items-center gap-1 md:flex" aria-label="Main navigation">
+              {PUBLIC_NAV_LINKS.map((link) => {
+                const isActive = location.pathname === link.href;
+
+                return (
+                  <Link
+                    key={link.href}
+                    to={link.href}
+                    aria-current={isActive ? 'page' : undefined}
+                    className={cn(
+                      'inline-flex items-center rounded-full px-4 py-2 text-body-sm font-medium transition-colors duration-fast',
+                      'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-bg',
+                      isActive
+                        ? 'bg-bg-hover text-text'
+                        : 'text-text-muted hover:bg-bg-hover/60 hover:text-text'
+                    )}
+                  >
+                    {link.label}
+                  </Link>
+                );
+              })}
             </nav>
 
-            {/* Auth Buttons */}
-            <div className="hidden md:flex items-center gap-3">
-              <Link to="/login" className="btn-ghost btn-sm">
+            <div className="hidden items-center gap-2 justify-self-end md:flex">
+              <Link to={ROUTES.LOGIN} className="btn-ghost btn-sm">
                 Log in
               </Link>
-              <Link to="/register" className="btn-primary btn-sm">
+              <Link to={ROUTES.REGISTER} className="btn-primary btn-sm">
                 Get Started
               </Link>
             </div>
 
-            {/* Mobile Menu Button */}
             <button
-              className="md:hidden p-2 rounded-sm text-text-muted hover:text-text hover:bg-bg-hover transition-colors"
-              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              type="button"
+              className="col-start-3 justify-self-end rounded-full p-2 text-text-muted transition-colors hover:bg-bg-hover hover:text-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-bg md:hidden"
+              onClick={() => setMobileMenuOpen((open) => !open)}
               aria-expanded={mobileMenuOpen}
               aria-controls="mobile-menu"
               aria-label={mobileMenuOpen ? 'Close menu' : 'Open menu'}
             >
-              {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+              {mobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
             </button>
           </div>
-        </div>
 
-        {/* Mobile Menu */}
-        {mobileMenuOpen && (
-          <div id="mobile-menu" className="md:hidden py-4 border-t border-border animate-slide-down">
-            <nav className="flex flex-col gap-2" aria-label="Mobile navigation">
-              {PUBLIC_NAV_LINKS.map((link) => (
-                <Link
-                  key={link.href}
-                  to={link.href}
-                  className="px-2 py-2 text-body font-medium text-text-muted hover:text-text hover:bg-bg-hover rounded-sm transition-colors"
-                  onClick={() => setMobileMenuOpen(false)}
-                >
-                  {link.label}
-                </Link>
-              ))}
-              <div className="pt-2 border-t border-border flex flex-col gap-2">
-                <Link
-                  to="/login"
-                  className="px-2 py-2 text-body font-medium text-text text-center hover:bg-bg-hover rounded-sm transition-colors"
-                  onClick={() => setMobileMenuOpen(false)}
-                >
-                  Log in
-                </Link>
-                <Link
-                  to="/register"
-                  className="btn-primary w-full text-center"
-                  onClick={() => setMobileMenuOpen(false)}
-                >
-                  Get Started
-                </Link>
-              </div>
-            </nav>
-          </div>
-        )}
+          {mobileMenuOpen && (
+            <div
+              id="mobile-menu"
+              className="mt-2 animate-slide-down rounded-2xl border border-border bg-bg-elevated/95 p-3 shadow-[0_24px_60px_-36px_rgba(0,0,0,0.95)] backdrop-blur-xl md:hidden"
+            >
+              <nav className="flex flex-col" aria-label="Mobile navigation">
+                {PUBLIC_NAV_LINKS.map((link) => {
+                  const isActive = location.pathname === link.href;
+
+                  return (
+                    <Link
+                      key={link.href}
+                      to={link.href}
+                      aria-current={isActive ? 'page' : undefined}
+                      className={cn(
+                        'rounded-xl px-3 py-2.5 text-body font-medium transition-colors',
+                        'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-bg',
+                        isActive ? 'bg-bg-hover text-text' : 'text-text-muted hover:bg-bg-hover/60 hover:text-text'
+                      )}
+                    >
+                      {link.label}
+                    </Link>
+                  );
+                })}
+
+                <div className="mt-2 flex flex-col gap-2 border-t border-border pt-3">
+                  <Link
+                    to={ROUTES.LOGIN}
+                    className="rounded-xl px-3 py-2.5 text-center text-body font-medium text-text transition-colors hover:bg-bg-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-bg"
+                  >
+                    Log in
+                  </Link>
+                  <Link
+                    to={ROUTES.REGISTER}
+                    className="btn-primary w-full text-center"
+                  >
+                    Get Started
+                  </Link>
+                </div>
+              </nav>
+            </div>
+          )}
+        </div>
       </header>
 
       {/* Main Content */}
-      <main className="flex-1 pt-16 pb-8">
+      <main className="flex-1 pt-20 pb-8">
         <Outlet />
       </main>
 

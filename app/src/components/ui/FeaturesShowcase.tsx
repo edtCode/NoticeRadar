@@ -62,15 +62,19 @@ export interface FeaturesShowcaseProps {
   questions?: string[];
   features?: ShowcaseFeature[];
   className?: string;
+  /** Page-level pages use h1; embedded sections use h2. */
+  headingLevel?: 1 | 2;
 }
 
 export function FeaturesShowcase({
   questions = NOTICE_QUESTIONS,
   features = FEATURES,
   className,
+  headingLevel = 1,
 }: FeaturesShowcaseProps) {
   // Deal the questions into three rows so no row repeats a theme
   const rows = [0, 1, 2].map((row) => questions.filter((_, index) => index % 3 === row));
+  const Heading = headingLevel === 1 ? 'h1' : 'h2';
 
   return (
     <section className={cn('relative', className)} aria-labelledby="features-showcase-title">
@@ -81,13 +85,13 @@ export function FeaturesShowcase({
             Features
           </span>
 
-          <h1
+          <Heading
             id="features-showcase-title"
             className="max-w-3xl text-balance text-[clamp(2.5rem,5.5vw,4.25rem)] font-semibold leading-[1.04] tracking-tight text-text"
           >
             Removing the{' '}
             <span className="marker-loud marker-stamp text-loud-ink">noise</span> from your notice feed
-          </h1>
+          </Heading>
 
           <p className="max-w-xl text-pretty text-body leading-relaxed text-text-muted md:text-lg">
             It&apos;s easy to get lost in a sea of circulars, conflicting deadlines, and endless
