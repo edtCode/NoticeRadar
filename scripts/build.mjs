@@ -7,8 +7,10 @@ const runtimeDependencies = [
     "cors",
     "dotenv",
     "express",
+    "googleapis",
     "multer",
     "pdf-parse",
+    "resend",
     "zod"
 ];
 
