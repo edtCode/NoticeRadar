@@ -5,10 +5,13 @@ import {
     getGmailClientFromEncrypted,
     listHistoryMessages,
     getMessage,
-    getHistory,
-    updateGmailHistoryId
+    getHistory
 } from "../services/gmail.service.js";
-import { getGmailAccount, processIncomingMessage } from "../services/email-announcement.service.js";
+import {
+    getGmailAccount,
+    processIncomingMessage,
+    updateGmailHistoryId
+} from "../services/email-announcement.service.js";
 
 const RUN_INTERVAL_MS = 15 * 60 * 1000;
 const MAX_MESSAGES_PER_ACCOUNT = 50;
