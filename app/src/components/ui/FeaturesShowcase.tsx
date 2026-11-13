@@ -104,21 +104,21 @@ export function FeaturesShowcase({
 
       {/* Three ticker rows — the questions students actually ask */}
       <div className="mt-10 overflow-hidden sm:mt-14">
-        <Marquee fade duration="56s" gap="0.75rem">
+        <Marquee fade duration="56s" gap="0.75rem" repeat={4}>
           {rows[0].map((question) => (
             <span key={question} className="showcase-chip">
               {question}
             </span>
           ))}
         </Marquee>
-        <Marquee fade reverse duration="68s" gap="0.75rem" className="mt-3">
+        <Marquee fade reverse duration="68s" gap="0.75rem" className="mt-3" repeat={4}>
           {rows[1].map((question) => (
             <span key={question} className="showcase-chip">
               {question}
             </span>
           ))}
         </Marquee>
-        <Marquee fade duration="50s" gap="0.75rem" className="mt-3">
+        <Marquee fade duration="50s" gap="0.75rem" className="mt-3" repeat={4}>
           {rows[2].map((question) => (
             <span key={question} className="showcase-chip">
               {question}

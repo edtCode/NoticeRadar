@@ -65,6 +65,9 @@ export function Marquee({
             reverse && '[animation-direction:reverse]',
             pauseOnHover && 'group-hover:[animation-play-state:paused]'
           )}
+          style={{
+            animationDelay: `${index * 0.5}s`,
+          } as CSSProperties}
         >
           {children}
         </div>
