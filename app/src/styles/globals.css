@@ -283,44 +283,6 @@
   }
   .btn-cta-breathe { animation: nr-cta-breathe 5s var(--ease-sweep) infinite; }
 
-  /* noise word — neon sweep then letter-by-letter write */
-  .noise-word {
-    position: relative;
-    display: inline-block;
-  }
-  .noise-neon {
-    position: absolute;
-    inset: -0.1em -0.05em;
-    background: linear-gradient(90deg, var(--color-loud), var(--color-accent), var(--color-loud));
-    background-size: 200% 100%;
-    border-radius: 2px;
-    opacity: 0;
-    filter: blur(2px);
-    animation: nr-neon-sweep 700ms var(--ease-arrive) both;
-    z-index: -1;
-  }
-  .noise-text {
-    display: inline-flex;
-    color: var(--color-loud-ink);
-    background: linear-gradient(90deg, var(--color-loud-ink), var(--color-loud-ink));
-    background-size: 0% 100%;
-    background-repeat: no-repeat;
-    background-position: 0 100%;
-    -webkit-background-clip: text;
-    background-clip: text;
-    -webkit-text-fill-color: transparent;
-    animation: nr-word-write 900ms var(--ease-arrive) 700ms both;
-  }
-  @keyframes nr-neon-sweep {
-    0% { opacity: 0; background-position: 200% 0; filter: blur(4px); transform: scaleX(0.8); }
-    30% { opacity: 1; filter: blur(2px); }
-    100% { opacity: 1; background-position: -100% 0; filter: blur(2px); transform: scaleX(1); }
-  }
-  @keyframes nr-word-write {
-    0% { background-size: 0% 100%; -webkit-text-fill-color: transparent; }
-    100% { background-size: 100% 100%; -webkit-text-fill-color: transparent; }
-  }
-
   /* Hero bloom — soft colour fields behind the hero */
   .hero-bloom {
     background:

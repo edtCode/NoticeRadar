@@ -90,10 +90,7 @@ export function FeaturesShowcase({
             className="max-w-3xl text-balance text-[clamp(2.5rem,5.5vw,4.25rem)] font-semibold leading-[1.04] tracking-tight text-text"
           >
             Removing the{' '}
-            <span className="noise-word">
-              <span className="noise-neon" aria-hidden="true"></span>
-              <span className="noise-text">noise</span>
-            </span> from your notice feed
+            <span className="marker-loud marker-stamp text-loud-ink">noise</span> from your notice feed
           </Heading>
 
           <p className="max-w-xl text-pretty text-body leading-relaxed text-text-muted md:text-lg">
