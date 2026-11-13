@@ -98,7 +98,7 @@ export function PublicLayout() {
       {/* Floating navigation pill */}
       <header className="fixed inset-x-0 top-0 z-40">
         <div className="mx-auto max-w-[1400px] px-3 sm:px-6 lg:px-8">
-          <div className="mt-3 grid h-14 grid-cols-[1fr_auto_1fr] items-center gap-3 rounded-full border border-border bg-bg-elevated/85 pl-4 pr-2 shadow-[0_20px_50px_-32px_rgba(0,0,0,0.95)] backdrop-blur-xl sm:pl-5 sm:pr-3">
+          <div className="mt-3 grid h-14 grid-cols-[1fr_auto_1fr] items-center gap-3 rounded-full border border-border bg-bg-elevated/95 pl-4 pr-2 shadow-[0_20px_50px_-32px_rgba(0,0,0,0.5)] backdrop-blur-xl sm:pl-5 sm:pr-3">
             <Link
               to={ROUTES.HOME}
               aria-label="Oppora home"
