@@ -60,7 +60,7 @@ export function NoticeCard({ notice, saved, onSave, onUnsave, savePending, showE
       )}
 
       <div className="mt-4 pt-3 border-t border-border flex items-center justify-between gap-2">
-        <div className="flex items-center gap-3 min-w-0">
+        <div className="flex min-w-0 flex-wrap items-center gap-2 sm:gap-3">
           <span className="text-caption text-text-muted whitespace-nowrap">
             {notice.published_at ? formatDate(notice.published_at) : '—'}
           </span>

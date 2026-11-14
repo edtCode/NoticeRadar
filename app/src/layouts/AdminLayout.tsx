@@ -62,9 +62,9 @@ export function AdminLayout() {
       {/* Sidebar */}
       <aside
         className={cn(
-          'fixed top-0 left-0 z-50 h-screen bg-bg-elevated border-r border-border transition-[width,transform,margin] duration-normal ease',
+          'fixed top-0 left-0 z-50 h-screen w-[85vw] max-w-[300px] bg-bg-elevated border-r border-border transition-[width,transform,margin] duration-normal ease',
           'flex flex-col',
-          sidebarCollapsed ? 'w-[64px]' : 'w-[280px]',
+          sidebarCollapsed ? 'lg:w-[64px]' : 'lg:w-[280px]',
           mobileSidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
         )}
         aria-label="Admin navigation"
@@ -223,8 +223,9 @@ export function AdminLayout() {
 
       {/* Top Navbar */}
       <header className={cn(
-        'fixed top-0 right-0 z-40 h-16 bg-bg-elevated/95 backdrop-blur border-b border-border transition-[width,transform,margin] duration-normal ease',
-        sidebarCollapsed ? 'left-[64px]' : 'left-[280px]'
+        'fixed top-0 left-0 right-0 z-40 h-16 bg-bg-elevated/95 backdrop-blur border-b border-border transition-[width,transform,margin] duration-normal ease',
+        // Below lg the sidebar is off-canvas, so the bar must span the full width.
+        sidebarCollapsed ? 'lg:left-[64px]' : 'lg:left-[280px]'
       )}>
         <div className="flex h-full items-center justify-between px-4 sm:px-6">
           {/* Mobile Menu Button */}

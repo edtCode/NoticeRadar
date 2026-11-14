@@ -80,7 +80,7 @@ export function Skeleton({
 export function TableSkeleton({ rows = 5, columns = 4 }: { rows?: number; columns?: number }) {
   return (
     <div className="overflow-x-auto scrollbar-thin">
-      <table className="w-full border-collapse" role="table">
+      <table className="w-full min-w-[640px] border-collapse" role="table">
         <thead>
           <tr className="bg-bg text-text-muted text-body-sm font-medium uppercase tracking-wide">
             {Array.from({ length: columns }).map((_, i) => (

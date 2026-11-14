@@ -188,7 +188,7 @@ export function AdminReviewWorkspacePage() {
       <div className="grid lg:grid-cols-2 gap-6">
         {/* LEFT: PDF */}
         <section className="bg-bg-elevated border border-border rounded-lg overflow-hidden flex flex-col" aria-labelledby="pdf-heading">
-          <div className="flex items-center justify-between px-4 py-2.5 border-b border-border bg-bg" id="pdf-heading" aria-label="PDF controls">
+          <div className="flex flex-wrap items-center justify-between gap-2 px-4 py-2.5 border-b border-border bg-bg" id="pdf-heading" aria-label="PDF controls">
             <span className="text-body-sm font-medium text-text flex items-center gap-2">
               <FileText className="w-4 h-4" aria-hidden="true" /> Original PDF
             </span>
@@ -385,7 +385,7 @@ export function AdminReviewWorkspacePage() {
             Rejection keeps the notice unpublished and records your review note. Provide a clear reason for the record.
           </p>
           <Textarea value={rejectNote} onChange={(e) => setRejectNote(e.target.value)} placeholder="Why is this notice being rejected?" rows={3} />
-          <div className="flex justify-end gap-3">
+          <div className="flex flex-wrap justify-end gap-3">
             <Button variant="ghost" onClick={() => setRejectOpen(false)}>Cancel</Button>
             <Button variant="danger" onClick={reject} loading={rejectMutation.isPending}>Reject</Button>
           </div>

@@ -83,7 +83,7 @@ export function NotificationsPage() {
               return (
                 <li
                   key={n.id}
-                  className={cn('flex items-start gap-4 p-4', isUnread && 'bg-accent-soft/30')}
+                  className={cn('flex flex-wrap items-start gap-3 p-4 sm:flex-nowrap sm:gap-4', isUnread && 'bg-accent-soft/30')}
                 >
                   <span className={`mt-1 w-2.5 h-2.5 rounded-full flex-shrink-0 ${isUnread ? 'bg-accent' : 'bg-border'}`} aria-hidden="true" />
                   <div className="min-w-0 flex-1">
@@ -106,7 +106,7 @@ export function NotificationsPage() {
                     <button
                       onClick={() => handleMarkRead(n.id)}
                       disabled={markReadMutation.isPending}
-                      className="btn-secondary btn-sm flex-shrink-0"
+                      className="btn-secondary btn-sm ml-auto flex-shrink-0 sm:ml-0"
                     >
                       Mark read
                     </button>

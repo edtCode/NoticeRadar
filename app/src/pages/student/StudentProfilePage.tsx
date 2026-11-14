@@ -280,7 +280,7 @@ export function StudentProfilePage() {
               <p className="text-body-sm text-text-muted">Saving changes recomputes your personalised feed and eligibility results against the updated profile.</p>
             </div>
 
-            <div className="flex justify-end gap-3">
+            <div className="flex flex-wrap justify-end gap-3">
               <Button
                 type="button"
                 variant="ghost"

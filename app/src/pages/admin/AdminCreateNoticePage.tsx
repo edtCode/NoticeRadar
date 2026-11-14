@@ -208,7 +208,7 @@ function NoticeForm({ mode, notice }: { mode: 'create' | 'edit'; notice?: Notice
                   </span>
                 ))}
               </div>
-              <div className="flex gap-2">
+              <div className="flex flex-wrap gap-2">
                 <SelectDropdown
                   value={branchInput}
                   placeholder="Add branch…"
@@ -245,7 +245,7 @@ function NoticeForm({ mode, notice }: { mode: 'create' | 'edit'; notice?: Notice
             {/* Backlog requirement checkbox */}
             <fieldset>
               <legend className="text-body-sm font-medium text-text mb-2">No-backlogs requirement</legend>
-              <div className="flex gap-2">
+              <div className="flex flex-wrap gap-2">
                 {([
                   { key: 'unspecified', label: 'Not specified' },
                   { key: 'yes', label: 'Required (zero backlogs)' },
@@ -299,7 +299,7 @@ function NoticeForm({ mode, notice }: { mode: 'create' | 'edit'; notice?: Notice
         {/* Actions */}
         <div className="flex flex-wrap items-center justify-between gap-3 pt-2">
           <Button variant="ghost" onClick={() => navigate('/admin/notices')}><ArrowLeft className="w-4 h-4" /> Back to Notice Management</Button>
-          <div className="flex gap-3">
+          <div className="flex flex-wrap gap-3">
             {mode === 'create' && (
               <Button variant="secondary" loading={mutation.isPending} onClick={() => handleSave('DRAFT')}>
                 <Save className="w-4 h-4" /> Save as Draft

@@ -146,9 +146,9 @@ export function AnnouncementDetailPage() {
   const row = (label: string, value: string | number | null) => {
     if (value === null || value === undefined || value === '') return null;
     return (
-      <div className="flex justify-between gap-4 py-2 border-b border-border last:border-b-0 key:sm:text-left">
+      <div className="flex justify-between gap-4 py-2 border-b border-border last:border-b-0">
         <dt className="text-body-sm text-text-muted flex-shrink-0">{label}</dt>
-        <dd className="text-body-sm text-text text-right">{String(value)}</dd>
+        <dd className="min-w-0 break-words text-right text-body-sm text-text">{String(value)}</dd>
       </div>
     );
   };
@@ -183,8 +183,8 @@ export function AnnouncementDetailPage() {
             )}
           </div>
 
-          <div className="flex items-center gap-2 flex-shrink-0">
-            <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2 sm:flex-shrink-0">
+            <div className="flex flex-wrap items-center gap-2">
               <button
                 onClick={toggleSave}
                 disabled={savePendingLocal || bookmarkMutation.isPending}

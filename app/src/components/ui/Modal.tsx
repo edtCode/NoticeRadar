@@ -82,7 +82,7 @@ export function Modal({
 
   const modalContent = (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 animate-fade-in"
+      className="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto p-4 animate-fade-in"
       onClick={(e) => {
         if (closeOnOverlayClick && e.target === e.currentTarget) onClose();
       }}
@@ -95,7 +95,7 @@ export function Modal({
         ref={contentRef}
         tabIndex={-1}
         className={cn(
-          'w-full bg-bg-elevated border-[1.5px] border-ink rounded-lg card-signal card-signal-hover animate-slide-up',
+          'my-auto max-h-[calc(100dvh-2rem)] w-full overflow-y-auto bg-bg-elevated border-[1.5px] border-ink rounded-lg card-signal card-signal-hover animate-slide-up scrollbar-thin',
           sizeStyles[size]
         )}
       >

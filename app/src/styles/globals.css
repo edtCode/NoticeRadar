@@ -110,11 +110,23 @@
     font-size: 16px;
     line-height: 1.55;
     -webkit-font-smoothing: antialiased;
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
     color: var(--color-text);
     background-color: var(--color-bg);
   }
 
-  body { margin: 0; min-height: 100vh; }
+  /* Long emails, URLs and unbroken titles must wrap instead of widening the page. */
+  body {
+    margin: 0;
+    min-height: 100vh;
+    overflow-x: hidden;
+    overflow-wrap: break-word;
+  }
+
+  img, video, canvas { max-width: 100%; height: auto; }
+
+  input, select, textarea, button { max-width: 100%; }
 
   h1, h2, h3, h4, .font-display {
     font-family: var(--font-display);
@@ -142,6 +154,7 @@
 @layer utilities {
   .text-balance { text-wrap: balance; }
   .text-pretty { text-wrap: pretty; }
+  .break-anywhere { overflow-wrap: anywhere; }
 
   /* Marquee edge feather — pairs with the Marquee component */
   .marquee-fade {

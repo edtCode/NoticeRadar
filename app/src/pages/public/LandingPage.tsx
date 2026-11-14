@@ -20,7 +20,7 @@ function HeroPreview() {
   return (
     <div className="flex h-full w-full text-left">
       {/* Sidebar */}
-      <aside className="hidden w-[240px] shrink-0 flex-col gap-1 border-r border-border bg-bg-elevated p-3 sm:flex">
+      <aside className="hidden w-[240px] shrink-0 flex-col gap-1 border-r border-border bg-bg-elevated p-3 md:flex">
         <div className="mb-3 flex items-center gap-2 px-2 py-1">
           <OpporaMark size="sm" />
           <span className="font-display text-body font-bold tracking-tight text-text">Oppora</span>
@@ -93,7 +93,7 @@ function HeroPreview() {
             </span>
           </div>
 
-          <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-3">
+          <div className="mt-4 grid grid-cols-1 gap-3 md:grid-cols-3">
             {[
               { tone: 'from-accent/25 to-accent/5', tag: 'Placement' },
               { tone: 'from-coral/25 to-coral/5', tag: 'Scholarship' },

@@ -102,7 +102,7 @@ function UploadFlow() {
         <CheckCircle2 className="w-16 h-16 text-success mx-auto mb-4" aria-hidden="true" />
         <h1 className="text-h1 font-semibold text-text mb-2">PDF uploaded successfully</h1>
         <p className="text-body text-text-muted mb-8">“{createdNoticeTitle}” is ready for AI processing.</p>
-        <div className="flex justify-center gap-3">
+        <div className="flex flex-wrap justify-center gap-3">
           <Button onClick={() => navigate(`${ROUTES.ADMIN_EDIT(noticeId)}/processing`)} className="h-10">Process PDF</Button>
           <Button variant="secondary" onClick={() => navigate(`${ROUTES.ADMIN_NOTICES}`)} className="h-10">Return to notices</Button>
         </div>

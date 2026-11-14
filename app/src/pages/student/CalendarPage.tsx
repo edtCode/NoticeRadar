@@ -143,7 +143,7 @@ export function CalendarPage() {
 
           <div className="grid grid-cols-7 gap-1 text-center" role="grid" aria-label={monthLabel}>
             {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((d) => (
-              <div key={d} className="py-2 text-caption font-medium text-text-muted uppercase" role="columnheader">{d}</div>
+              <div key={d} className="py-1.5 text-[10px] font-medium text-text-muted uppercase sm:py-2 sm:text-caption" role="columnheader">{d}</div>
             ))}
             {cells.map((cell, i) => {
               const isToday = cell.date && cell.date.toDateString() === today.toDateString();
@@ -154,7 +154,7 @@ export function CalendarPage() {
                   role="gridcell"
                   aria-label={cell.date ? `${cell.date.getDate()} ${monthLabel}, ${cell.deadlines.length} deadlines` : undefined}
                   className={cn(
-                    'min-h-[80px] p-1.5 rounded-sm border text-left',
+                    'min-h-[52px] p-1 rounded-sm border text-left sm:min-h-[80px] sm:p-1.5',
                     cell.date ? 'border-border bg-bg' : 'border-transparent',
                     isToday && 'border-accent ring-1 ring-accent',
                     cell.deadlines.length > 0 && 'bg-warning-soft/40',
@@ -162,7 +162,11 @@ export function CalendarPage() {
                   )}
                 >
                   {cell.date && <span className={cn('text-caption', isToday ? 'font-bold text-accent' : 'text-text-muted')}>{cell.date.getDate()}</span>}
-                  <div className="mt-1 space-y-1">
+                  {/* Phones have no room for titles inside a 7-column grid — show a marker instead. */}
+                  {cell.deadlines.length > 0 && (
+                    <span className="mt-1.5 block h-1.5 w-1.5 rounded-full bg-accent sm:hidden" aria-hidden="true" />
+                  )}
+                  <div className="mt-1 hidden space-y-1 sm:block">
                     {cell.deadlines.slice(0, 2).map((dl) => (
                       <Link
                         key={dl.id}

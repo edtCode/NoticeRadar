@@ -93,7 +93,7 @@ export function ToastContainer({
   onClose: (id: string) => void;
 }) {
   return (
-    <div className="fixed bottom-8 right-8 z-50 flex flex-col gap-3 pointer-events-none">
+    <div className="pointer-events-none fixed inset-x-3 bottom-3 z-50 flex flex-col gap-3 sm:inset-x-auto sm:bottom-8 sm:right-8 sm:max-w-sm">
       {toasts.map((toast) => (
         <div key={toast.id} className="pointer-events-auto">
           <ToastItem toast={toast} onClose={onClose} />

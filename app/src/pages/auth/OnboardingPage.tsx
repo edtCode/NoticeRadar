@@ -293,37 +293,37 @@ export function OnboardingPage() {
             <SectionHeader title="Review your profile" description="Check everything before completing. You can edit each section using the back button." />
 
             <dl>
-              <div className="flex justify-between py-2 border-b border-border">
+              <div className="flex justify-between gap-4 py-2 border-b border-border">
                 <dt className="text-body-sm text-text-muted">Institution</dt>
-                <dd className="text-body-sm font-medium text-text">
+                <dd className="min-w-0 break-words text-right text-body-sm font-medium text-text">
                   {institutionName || '—'}
                 </dd>
               </div>
-              <div className="flex justify-between py-2 border-b border-border">
+              <div className="flex justify-between gap-4 py-2 border-b border-border">
                 <dt className="text-body-sm text-text-muted">Department</dt>
-                <dd className="text-body-sm font-medium text-text">
+                <dd className="min-w-0 break-words text-right text-body-sm font-medium text-text">
                   {watched.departmentName || '—'}
                 </dd>
               </div>
-              <div className="flex justify-between py-2 border-b border-border">
+              <div className="flex justify-between gap-4 py-2 border-b border-border">
                 <dt className="text-body-sm text-text-muted">Branch</dt>
-                <dd className="text-body-sm font-medium text-text">{watched.branch || '—'}</dd>
+                <dd className="min-w-0 break-words text-right text-body-sm font-medium text-text">{watched.branch || '—'}</dd>
               </div>
-              <div className="flex justify-between py-2 border-b border-border">
+              <div className="flex justify-between gap-4 py-2 border-b border-border">
                 <dt className="text-body-sm text-text-muted">Semester</dt>
-                <dd className="text-body-sm font-medium text-text">{watched.semester || '—'}</dd>
+                <dd className="min-w-0 break-words text-right text-body-sm font-medium text-text">{watched.semester || '—'}</dd>
               </div>
-              <div className="flex justify-between py-2 border-b border-border">
+              <div className="flex justify-between gap-4 py-2 border-b border-border">
                 <dt className="text-body-sm text-text-muted">CPI</dt>
-                <dd className="text-body-sm font-medium text-text">{watched.cpi ?? '—'}</dd>
+                <dd className="min-w-0 break-words text-right text-body-sm font-medium text-text">{watched.cpi ?? '—'}</dd>
               </div>
-              <div className="flex justify-between py-2 border-b border-border">
+              <div className="flex justify-between gap-4 py-2 border-b border-border">
                 <dt className="text-body-sm text-text-muted">Graduation year</dt>
-                <dd className="text-body-sm font-medium text-text">{watched.graduationYear || '—'}</dd>
+                <dd className="min-w-0 break-words text-right text-body-sm font-medium text-text">{watched.graduationYear || '—'}</dd>
               </div>
-              <div className="flex justify-between py-2 border-b border-border">
+              <div className="flex justify-between gap-4 py-2 border-b border-border">
                 <dt className="text-body-sm text-text-muted">Active backlogs</dt>
-                <dd className="text-body-sm font-medium text-text">{watched.activeBacklogs ?? 0}</dd>
+                <dd className="min-w-0 break-words text-right text-body-sm font-medium text-text">{watched.activeBacklogs ?? 0}</dd>
               </div>
               <div className="py-2">
                 <dt className="text-body-sm text-text-muted mb-2">Interests</dt>

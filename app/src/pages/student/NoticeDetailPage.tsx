@@ -14,7 +14,7 @@ function Row({ label, value }: { label: string; value?: string | number | null }
   return (
     <div className="flex justify-between gap-4 py-2.5 border-b border-border last:border-b-0">
       <dt className="text-body-sm text-text-muted flex-shrink-0">{label}</dt>
-      <dd className="text-body-sm text-text text-right">{value}</dd>
+      <dd className="min-w-0 break-words text-right text-body-sm text-text">{value}</dd>
     </div>
   );
 }

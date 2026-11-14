@@ -142,7 +142,7 @@ export function GmailConnectPage() {
                 Emails are scanned periodically. You can sync now to import
                 recent announcements immediately.
               </p>
-              <div className="mt-4 flex items-center gap-3">
+              <div className="mt-4 flex flex-wrap items-center gap-3">
                 <Button
                   onClick={handleSync}
                   disabled={status.loading}

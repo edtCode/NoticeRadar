@@ -50,10 +50,14 @@ export function Table<T>({
     right: 'text-right',
   };
 
+  // Wide tables keep a readable column width on phones and scroll inside their
+  // wrapper instead of squeezing every cell into the viewport.
+  const tableStyle = { minWidth: columns.length >= 5 ? 640 : undefined };
+
   if (loading) {
     return (
       <div className="overflow-x-auto scrollbar-thin">
-        <table className="w-full border-collapse" role="table">
+        <table className="w-full border-collapse" role="table" style={tableStyle}>
           <thead>
             <tr className="bg-bg text-text-muted text-body-sm font-medium uppercase tracking-wide">
               {columns.map((col) => (
@@ -98,7 +102,7 @@ export function Table<T>({
 
   return (
     <div className={cn('overflow-x-auto scrollbar-thin', className)}>
-      <table className="w-full border-collapse" role="table">
+      <table className="w-full border-collapse" role="table" style={tableStyle}>
         <thead>
           <tr className="bg-bg text-text-muted text-body-sm font-medium uppercase tracking-wide">
             {columns.map((col) => (
@@ -201,7 +205,7 @@ export function Pagination({
         </p>
       )}
 
-      <div className="flex items-center gap-3">
+      <div className="flex flex-wrap items-center justify-center gap-3">
         {onPageSizeChange && (
           <select
             value={pageSize}
