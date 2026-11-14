@@ -52,12 +52,14 @@ export const adminService = {
   },
 
   // Processing
+  // OCR on scanned PDFs plus AI extraction can take a couple of minutes, well
+  // past the client's default request timeout.
   async processNotice(id: string): Promise<ProcessResult> {
-    return api.post<ProcessResult>(`/admin/notices/${id}/process`);
+    return api.post<ProcessResult>(`/admin/notices/${id}/process`, undefined, { timeout: 180000 });
   },
 
   async retryProcessing(id: string): Promise<ProcessResult> {
-    return api.post<ProcessResult>(`/admin/notices/${id}/retry`);
+    return api.post<ProcessResult>(`/admin/notices/${id}/retry`, undefined, { timeout: 180000 });
   },
 
   // Review queue

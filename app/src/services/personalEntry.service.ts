@@ -29,12 +29,14 @@ export const personalEntryService = {
   },
 
   // Reads a PDF (or pasted text) and returns the fields to prefill the form.
+  // Scanned PDFs need OCR on top of extraction, so give these calls a longer
+  // timeout than the client default.
   async extractFromFile(file: File): Promise<PersonalEntryDraft> {
-    return api.upload<PersonalEntryDraft>('/me/entries/extract', file);
+    return api.upload<PersonalEntryDraft>('/me/entries/extract', file, undefined, { timeout: 180000 });
   },
 
   async extractFromText(text: string): Promise<PersonalEntryDraft> {
-    return api.post<PersonalEntryDraft>('/me/entries/extract', { text });
+    return api.post<PersonalEntryDraft>('/me/entries/extract', { text }, { timeout: 180000 });
   },
 
   // Re-checks eligibility for criteria the student edited after extraction.

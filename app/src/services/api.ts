@@ -1,4 +1,4 @@
-import axios, { type AxiosInstance, type AxiosError, type InternalAxiosRequestConfig } from 'axios';
+import axios, { type AxiosInstance, type AxiosError, type AxiosRequestConfig, type InternalAxiosRequestConfig } from 'axios';
 import { createClient, type SupabaseClient } from '@supabase/supabase-js';
 import type { ApiErrorPayload } from '../types';
 import { API_BASE_URL, SUPABASE_ANON_KEY, SUPABASE_URL } from '../constants';
@@ -150,8 +150,9 @@ class ApiClient {
     return this.unwrap<T>(response.data);
   }
 
-  async post<T>(url: string, data?: unknown): Promise<T> {
-    const response = await this.client.post<T>(url, data);
+  // `config` lets a slow call (AI extraction, OCR) opt out of the default 30s timeout.
+  async post<T>(url: string, data?: unknown, config?: AxiosRequestConfig): Promise<T> {
+    const response = await this.client.post<T>(url, data, config);
     return this.unwrap<T>(response.data);
   }
 
@@ -170,12 +171,13 @@ class ApiClient {
     return this.unwrap<T>(response.data);
   }
 
-  async upload<T>(url: string, file: File, onProgress?: (progress: number) => void): Promise<T> {
+  async upload<T>(url: string, file: File, onProgress?: (progress: number) => void, config?: AxiosRequestConfig): Promise<T> {
     const formData = new FormData();
     formData.append('file', file);
 
     const response = await this.client.post<T>(url, formData, {
-      headers: { 'Content-Type': 'multipart/form-data' },
+      ...config,
+      headers: { 'Content-Type': 'multipart/form-data', ...config?.headers },
       onUploadProgress: (progressEvent) => {
         if (onProgress && progressEvent.total) {
           onProgress(Math.round((progressEvent.loaded * 100) / progressEvent.total));

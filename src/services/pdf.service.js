@@ -1,7 +1,7 @@
 import { PDFParse } from "pdf-parse";
 import { ApiError } from "../utils/errors.js";
 import { NOTICE_FILES_BUCKET } from "../utils/constants.js";
-import { transcribePageImage } from "./ai.service.js";
+import { transcribePageImages } from "./ai.service.js";
 
 const MINIMUM_TEXT_LENGTH = 20;
 const MINIMUM_PAGE_TEXT_LENGTH = 20;
@@ -11,7 +11,7 @@ const OCR_RENDER_SCALE = 2;
 // A page with no (or almost no) text layer is a scan or a photo pasted into the
 // PDF. Render it to an image so the vision model can read what the text layer
 // could not.
-const ocrPage = async (parser, pageNumber) => {
+const renderPage = async (parser, pageNumber) => {
     const screenshots = await parser.getScreenshot({
         first: pageNumber,
         last: pageNumber,
@@ -20,13 +20,27 @@ const ocrPage = async (parser, pageNumber) => {
         imageDataUrl: true
     });
 
-    const image = screenshots.pages?.[0];
+    return screenshots.pages?.[0]?.dataUrl ?? "";
+};
 
-    if (!image?.dataUrl) {
-        return "";
+// All the pages that need OCR are sent as one vision request: one call per page
+// made long scanned notices take minutes and time out in the client.
+const ocrPages = async (parser, candidates) => {
+    const images = [];
+
+    for (const page of candidates) {
+        const dataUrl = await renderPage(parser, page.pageNumber);
+
+        if (dataUrl) {
+            images.push({ pageNumber: page.pageNumber, dataUrl });
+        }
     }
 
-    return transcribePageImage(image.dataUrl);
+    if (images.length === 0) {
+        return [];
+    }
+
+    return transcribePageImages(images);
 };
 
 export const extractTextFromPdf = async (buffer) => {
@@ -46,13 +60,18 @@ export const extractTextFromPdf = async (buffer) => {
 
         let ocrError = null;
 
-        for (const page of ocrCandidates) {
+        if (ocrCandidates.length > 0) {
             try {
-                const ocrText = await ocrPage(parser, page.pageNumber);
+                const transcripts = await ocrPages(parser, ocrCandidates);
+                const textByPage = new Map(transcripts.map((page) => [page.pageNumber, page.text]));
 
-                if (ocrText) {
-                    page.text = ocrText;
-                    page.ocr = true;
+                for (const page of ocrCandidates) {
+                    const ocrText = textByPage.get(page.pageNumber);
+
+                    if (ocrText) {
+                        page.text = ocrText;
+                        page.ocr = true;
+                    }
                 }
             } catch (error) {
                 ocrError = error;

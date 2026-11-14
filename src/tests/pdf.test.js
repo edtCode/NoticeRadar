@@ -55,7 +55,7 @@ test("a PDF with no text layer is read by OCR from the rendered page image", asy
             return {
                 ok: true,
                 json: async () => ({
-                    choices: [{ message: { content: JSON.stringify({ text: "Campus placement drive: CSE students apply by 30 November 2026." }) } }]
+                    choices: [{ message: { content: JSON.stringify({ pages: [{ pageNumber: 1, text: "Campus placement drive: CSE students apply by 30 November 2026." }] }) } }]
                 })
             };
         },
@@ -66,8 +66,10 @@ test("a PDF with no text layer is read by OCR from the rendered page image", asy
     assert.equal(result.usedOcr, true);
     assert.deepEqual(result.ocrPages, [1]);
     assert.match(result.pages[0].text, /Campus placement drive/);
-    assert.equal(requestBody.messages[1].content[1].type, "image_url");
-    assert.match(requestBody.messages[1].content[1].image_url.url, /^data:image\/png;base64,/);
+    // Every page that needs OCR is sent in a single request as an image part.
+    const imageParts = requestBody.messages[1].content.filter((part) => part.type === "image_url");
+    assert.equal(imageParts.length, 1);
+    assert.match(imageParts[0].image_url.url, /^data:image\/png;base64,/);
 });
 
 test("a corrupted PDF is rejected with a 422", async () => {

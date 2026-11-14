@@ -3,7 +3,7 @@ import { ApiError } from "../utils/errors.js";
 import { extractionSchema, personalExtractionSchema } from "../validators/extraction.validator.js";
 
 const REQUEST_TIMEOUT_MS = 30000;
-const OCR_TIMEOUT_MS = 60000;
+const OCR_TIMEOUT_MS = 120000;
 const MAX_ATTEMPTS = 2;
 
 const SYSTEM_PROMPT = `
@@ -47,11 +47,12 @@ const OCR_SYSTEM_PROMPT = `
 You transcribe scanned or image-only pages of official college notices.
 
 Rules:
-- Return every word on the page exactly as written: headings, dates, numbers, tables, addresses and links.
+- Each image is one page. A "Page N:" line before an image tells you which page it is.
+- Return every word on each page exactly as written: headings, dates, numbers, tables, addresses and links.
 - Keep the natural reading order. Put each table row on its own line.
-- Do not summarise, translate, correct, reword or add anything that is not on the page.
-- If the page has no readable text at all, return an empty string for text.
-- Respond with a single JSON object only, with one key: text.
+- Do not summarise, translate, correct, reword or add anything that is not on a page.
+- Use an empty string for a page that has no readable text.
+- Respond with a single JSON object only, with one key: pages, an array of { "pageNumber": number, "text": string }.
 `;
 
 const getConfig = () => {
@@ -226,23 +227,30 @@ export const extractNoticeFromText = async (pages) => {
     return result.data;
 };
 
-// Reads a page that has no text layer at all (a scan or a photo placed in a PDF)
-// by sending the rendered page image to the configured vision-capable model.
-export const transcribePageImage = async (imageDataUrl) => {
+// Reads the pages that have no text layer at all (scans or photos placed in a
+// PDF) by sending all of their rendered page images to the configured
+// vision-capable model in one request.
+export const transcribePageImages = async (images) => {
     const config = getConfig();
-    const content = await requestWithRetry(
-        config,
-        [
-            { type: "text", text: "Transcribe every word on this page." },
-            { type: "image_url", image_url: { url: imageDataUrl } }
-        ],
-        OCR_SYSTEM_PROMPT,
-        { timeoutMs: OCR_TIMEOUT_MS }
-    );
+    const content = images.flatMap(({ pageNumber, dataUrl }) => [
+        { type: "text", text: `Page ${pageNumber}:` },
+        { type: "image_url", image_url: { url: dataUrl } }
+    ]);
 
-    const parsed = parseContent(content);
+    const response = await requestWithRetry(config, content, OCR_SYSTEM_PROMPT, { timeoutMs: OCR_TIMEOUT_MS });
+    const parsed = parseContent(response);
 
-    return typeof parsed?.text === "string" ? parsed.text.trim() : "";
+    // Providers occasionally answer a single page with a bare { text } object.
+    if (!Array.isArray(parsed?.pages) && typeof parsed?.text === "string" && images.length === 1) {
+        return [{ pageNumber: images[0].pageNumber, text: parsed.text.trim() }];
+    }
+
+    return (Array.isArray(parsed?.pages) ? parsed.pages : [])
+        .map((page) => ({
+            pageNumber: Number(page?.pageNumber),
+            text: typeof page?.text === "string" ? page.text.trim() : ""
+        }))
+        .filter((page) => Number.isInteger(page.pageNumber));
 };
 
 // Used by the student's own "Add a notice or event" flow, where the document is
