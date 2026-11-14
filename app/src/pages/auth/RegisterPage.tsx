@@ -88,8 +88,9 @@ export function RegisterPage() {
 
   if (registrationState === 'verify') {
     return (
-      <div className="min-h-screen flex flex-col justify-center py-12 px-4">
-        <div className="mx-auto w-full max-w-md text-center">
+      <div className="relative flex min-h-screen flex-col justify-center overflow-hidden px-4 py-12">
+        <div className="hero-bloom pointer-events-none absolute inset-0 opacity-70" aria-hidden="true" />
+        <div className="relative mx-auto w-full max-w-md text-center">
           <div className="w-16 h-16 mx-auto mb-6 rounded-full bg-accent-soft flex items-center justify-center">
             <Check className="w-8 h-8 text-accent" aria-hidden="true" />
           </div>
@@ -109,17 +110,20 @@ export function RegisterPage() {
   }
 
   return (
-    <div className="min-h-screen flex flex-col justify-center py-12 px-4 sm:px-6">
-      <div className="mx-auto w-full max-w-md">
-        <div className="text-center mb-8">
-          <Link to="/" className="inline-flex items-center gap-2 mb-6" aria-label="Oppora Home">
+    <div className="relative flex min-h-screen flex-col justify-center overflow-hidden px-4 py-12 sm:px-6">
+      <div className="hero-bloom pointer-events-none absolute inset-0 opacity-70" aria-hidden="true" />
+      <div className="relative mx-auto w-full max-w-md">
+        <div className="mb-8 text-center">
+          <Link to="/" className="mb-6 inline-flex items-center gap-2" aria-label="Oppora Home">
             <OpporaMark size="lg" />
           </Link>
-          <h1 className="text-h1 font-semibold text-text">Create your account</h1>
-          <p className="text-body text-text-muted mt-1">For students — free, always.</p>
+          <h1 className="text-h1 text-text">Create your account</h1>
+          <p className="mx-auto mt-2 max-w-xs text-body text-text-muted text-pretty">
+            For students — free, always.
+          </p>
         </div>
 
-        <form onSubmit={handleSubmit(onSubmit)} className="bg-bg-elevated border border-border rounded-lg p-6 space-y-4" noValidate>
+        <form onSubmit={handleSubmit(onSubmit)} className="card-signal space-y-4 p-6 sm:p-7" noValidate>
           {registerMutation.isError && (
             <div className="flex items-start gap-2 p-3 bg-danger-soft border border-danger rounded-sm" role="alert">
               <AlertCircle className="w-5 h-5 text-danger flex-shrink-0 mt-0.5" aria-hidden="true" />

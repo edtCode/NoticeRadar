@@ -79,15 +79,10 @@ export function FeaturesShowcase({
   return (
     <section className={cn('relative', className)} aria-labelledby="features-showcase-title">
       <div className="mx-auto w-full max-w-[1400px] px-4 pb-4 pt-14 sm:px-6 sm:pt-20 lg:px-8">
-        <header className="mx-auto flex max-w-5xl flex-col items-center gap-5 text-center">
-          <span className="inline-flex items-center gap-1.5 rounded-full border border-accent/30 bg-accent-soft px-3 py-1 text-caption font-semibold text-accent">
-            <span className="size-1.5 rounded-full bg-accent" aria-hidden="true" />
-            Features
-          </span>
-
+        <header className="mx-auto flex max-w-5xl flex-col items-center gap-6 text-center">
           <Heading
             id="features-showcase-title"
-            className="max-w-3xl text-balance text-[clamp(2.5rem,5.5vw,4.25rem)] font-semibold leading-[1.04] tracking-tight text-text"
+            className="max-w-3xl text-balance text-[clamp(2.25rem,4.6vw,3.5rem)] font-bold leading-[1.05] tracking-[-0.035em] text-text"
           >
             Removing the{' '}
             <span className="marker-loud marker-stamp text-loud-ink">noise</span> from your notice feed

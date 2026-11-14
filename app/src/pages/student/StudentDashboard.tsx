@@ -99,17 +99,20 @@ export function StudentDashboard() {
   const deadlineCount = deadlines.length + ownDeadlines.length;
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-10">
       {/* Welcome header */}
-      <header>
-        <h1 className="text-h1 font-semibold text-text">Good {greeting}, {firstName}!</h1>
-        <p className="text-body text-text-muted mt-1">
+      <header className="max-w-3xl">
+        <h1 className="text-h1 text-text">Good {greeting}, {firstName}!</h1>
+        <p className="mt-2 max-w-2xl text-body text-text-muted text-pretty">
           Here are the latest announcements and opportunities from your institution.
         </p>
         {user && (
-          <p className="text-caption text-text-muted mt-1">
-            {user.name} · Update your details any time from{' '}
-            <Link to={ROUTES.STUDENT_PROFILE} className="text-accent hover:underline">your profile</Link>.
+          <p className="mt-2 text-caption text-text-muted">
+            Eligibility is judged from your profile — update it any time from{' '}
+            <Link to={ROUTES.STUDENT_PROFILE} className="font-medium text-accent hover:underline">
+              your profile
+            </Link>
+            .
           </p>
         )}
       </header>
@@ -394,12 +397,16 @@ function StatCard({ icon, label, value, tone }: { icon: React.ReactNode; label: 
     info: 'bg-info-soft text-info',
   };
   return (
-    <div className="card-signal card-signal-hover p-5">
-      <div className={`w-9 h-9 rounded-md flex items-center justify-center mb-3 ${tones[tone]}`} aria-hidden="true">{icon}</div>
-      <p className="text-h2 font-semibold text-text">
+    <div className="card-signal card-signal-hover p-4 sm:p-5">
+      <div className="flex items-start justify-between gap-3">
+        <p className="meta-label max-w-[12ch] leading-tight">{label}</p>
+        <span className={`flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-sm ${tones[tone]}`} aria-hidden="true">
+          {icon}
+        </span>
+      </div>
+      <p className="mt-4 text-[1.75rem] font-semibold leading-none tracking-[-0.03em] text-text tnum">
         <AnimatedNumber value={value} placeholder="—" duration={900} />
       </p>
-      <p className="text-body-sm text-text-muted">{label}</p>
     </div>
   );
 }

@@ -30,7 +30,7 @@ export function NoticeCard({ notice, saved, onSave, onUnsave, savePending, showE
             <StatusBadge status={notice.eligibility.status} type="eligibility" size="sm" />
           )}
           {urgent && (
-            <span className="flex-shrink-0 w-2 h-2 rounded-full bg-loud animate-blink-dot" aria-label="Urgent deadline" />
+            <span className="flex-shrink-0 w-2 h-2 rounded-full bg-danger animate-blink-dot" aria-label="Urgent deadline" />
           )}
         </div>
         {onSave && onUnsave && (
@@ -61,7 +61,7 @@ export function NoticeCard({ notice, saved, onSave, onUnsave, savePending, showE
 
       <div className="mt-4 pt-3 border-t border-border flex items-center justify-between gap-2">
         <div className="flex min-w-0 flex-wrap items-center gap-2 sm:gap-3">
-          <span className="text-caption text-text-muted whitespace-nowrap">
+          <span className="text-caption tnum text-text-muted whitespace-nowrap">
             {notice.published_at ? formatDate(notice.published_at) : '—'}
           </span>
           {deadline && daysLeft !== null && (
@@ -88,9 +88,8 @@ export function NoticeCard({ notice, saved, onSave, onUnsave, savePending, showE
 
 function cnSignalCard(urgent: boolean, compact?: boolean): string {
   return cn(
-    'flex flex-col p-5',
-    compact ? 'p-4' : undefined,
-    urgent ? 'border-l-4 border-l-danger' : 'border-[1.5px] border-ink',
-    'bg-bg-elevated rounded-lg card-signal card-signal-hover hover:border-border-strong transition-colors'
+    'card-signal card-signal-hover flex flex-col',
+    compact ? 'p-4' : 'p-5',
+    urgent && 'ring-1 ring-danger/40'
   );
 }

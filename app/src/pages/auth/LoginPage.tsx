@@ -44,17 +44,20 @@ export function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col justify-center py-12 px-4 sm:px-6">
-      <div className="mx-auto w-full max-w-md">
-        <div className="text-center mb-8">
-          <Link to="/" className="inline-flex items-center gap-2 mb-6" aria-label="Oppora Home">
+    <div className="relative flex min-h-screen flex-col justify-center overflow-hidden px-4 py-12 sm:px-6">
+      <div className="hero-bloom pointer-events-none absolute inset-0 opacity-70" aria-hidden="true" />
+      <div className="relative mx-auto w-full max-w-md">
+        <div className="mb-8 text-center">
+          <Link to="/" className="mb-6 inline-flex items-center gap-2" aria-label="Oppora Home">
             <OpporaMark size="lg" />
           </Link>
-          <h1 className="text-h1 font-semibold text-text">Welcome back</h1>
-          <p className="text-body text-text-muted mt-1">Sign in to your Oppora account</p>
+          <h1 className="text-h1 text-text">Welcome back</h1>
+          <p className="mx-auto mt-2 max-w-xs text-body text-text-muted text-pretty">
+            Sign in to pick up the notices and deadlines waiting for you.
+          </p>
         </div>
 
-        <form onSubmit={handleSubmit(onSubmit)} className="bg-bg-elevated border border-border rounded-lg p-6 space-y-4" noValidate>
+        <form onSubmit={handleSubmit(onSubmit)} className="card-signal space-y-4 p-6 sm:p-7" noValidate>
           {authError && (
             <div className="flex items-start gap-2 p-3 bg-danger-soft border border-danger rounded-sm" role="alert">
               <AlertCircle className="w-5 h-5 text-danger flex-shrink-0 mt-0.5" aria-hidden="true" />
@@ -108,7 +111,7 @@ export function LoginPage() {
           </p>
         </form>
 
-        <p className="mt-6 text-center text-body-sm text-text-muted">
+        <p className="mx-auto mt-6 max-w-sm text-center text-caption leading-relaxed text-text-muted">
           By signing in you agree to our{' '}
           <Link to={ROUTES.TERMS} className="text-text-muted underline underline-offset-4 hover:text-text">
             Terms of Service
