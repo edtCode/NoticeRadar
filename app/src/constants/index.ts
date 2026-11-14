@@ -34,6 +34,9 @@ export const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY || '';
 export const LEGAL_CONTACT_EMAIL = 'noshivam19@gmail.com';
 export const LEGAL_LAST_UPDATED = '13 November 2026';
 
+// Public source repository — linked from the site navigation and footer.
+export const GITHUB_URL = 'https://github.com/edtCode/NoticeRadar';
+
 export const ROUTES = {
   // Public
   HOME: '/',
