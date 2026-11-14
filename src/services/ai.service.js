@@ -3,6 +3,7 @@ import { ApiError } from "../utils/errors.js";
 import { extractionSchema, personalExtractionSchema } from "../validators/extraction.validator.js";
 
 const REQUEST_TIMEOUT_MS = 30000;
+const OCR_TIMEOUT_MS = 60000;
 const MAX_ATTEMPTS = 2;
 
 const SYSTEM_PROMPT = `
@@ -40,6 +41,17 @@ Rules:
 - Use null for anything the text does not state, and [] for ambiguousFields when nothing is unclear.
 - Respond with a single JSON object only, with these keys:
   title, description, category, deadline, eventDate, eligibleBranches, minimumCPI, requiresNoBacklogs, ambiguousFields.
+`;
+
+const OCR_SYSTEM_PROMPT = `
+You transcribe scanned or image-only pages of official college notices.
+
+Rules:
+- Return every word on the page exactly as written: headings, dates, numbers, tables, addresses and links.
+- Keep the natural reading order. Put each table row on its own line.
+- Do not summarise, translate, correct, reword or add anything that is not on the page.
+- If the page has no readable text at all, return an empty string for text.
+- Respond with a single JSON object only, with one key: text.
 `;
 
 const getConfig = () => {
@@ -123,9 +135,9 @@ const parseContent = (content) => {
     }
 };
 
-const requestCompletion = async (config, userPrompt, systemPrompt = SYSTEM_PROMPT) => {
+const requestCompletion = async (config, userPrompt, systemPrompt = SYSTEM_PROMPT, { timeoutMs = REQUEST_TIMEOUT_MS } = {}) => {
     const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
+    const timeout = setTimeout(() => controller.abort(), timeoutMs);
 
     try {
         const response = await fetch(`${config.baseUrl}/chat/completions`, {
@@ -162,12 +174,12 @@ const requestCompletion = async (config, userPrompt, systemPrompt = SYSTEM_PROMP
     }
 };
 
-const requestWithRetry = async (config, userPrompt, systemPrompt = SYSTEM_PROMPT) => {
+const requestWithRetry = async (config, userPrompt, systemPrompt = SYSTEM_PROMPT, options = {}) => {
     let lastError;
 
     for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt += 1) {
         try {
-            return await requestCompletion(config, userPrompt, systemPrompt);
+            return await requestCompletion(config, userPrompt, systemPrompt, options);
         } catch (error) {
             lastError = error;
 
@@ -212,6 +224,25 @@ export const extractNoticeFromText = async (pages) => {
     }
 
     return result.data;
+};
+
+// Reads a page that has no text layer at all (a scan or a photo placed in a PDF)
+// by sending the rendered page image to the configured vision-capable model.
+export const transcribePageImage = async (imageDataUrl) => {
+    const config = getConfig();
+    const content = await requestWithRetry(
+        config,
+        [
+            { type: "text", text: "Transcribe every word on this page." },
+            { type: "image_url", image_url: { url: imageDataUrl } }
+        ],
+        OCR_SYSTEM_PROMPT,
+        { timeoutMs: OCR_TIMEOUT_MS }
+    );
+
+    const parsed = parseContent(content);
+
+    return typeof parsed?.text === "string" ? parsed.text.trim() : "";
 };
 
 // Used by the student's own "Add a notice or event" flow, where the document is

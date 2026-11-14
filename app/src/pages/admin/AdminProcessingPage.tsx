@@ -131,7 +131,7 @@ export function AdminProcessingPage() {
                     <p className="mt-1 text-body-sm text-danger">{notice.extraction_error}</p>
                   )}
                   {status === 'OCR_REQUIRED' && i === 0 && (
-                    <p className="mt-1 text-body-sm text-warning">This PDF looks like a scan. OCR support isn't available in the backend yet — retake or obtain a text-based PDF.</p>
+                    <p className="mt-1 text-body-sm text-warning">This PDF looks like a scan. OCR ran on the image-only pages but could not read usable text — check that the scan is clear and upright, then retry.</p>
                   )}
                   {status === 'COMPLETED' && i === 4 && (
                     <p className="mt-1 text-body-sm text-success">Extraction complete — the notice is ready for your review.</p>
@@ -165,9 +165,9 @@ export function AdminProcessingPage() {
         <div className="bg-warning-soft border border-warning rounded-lg p-4 flex items-start gap-3" role="alert">
           <ScanLine className="w-5 h-5 text-warning flex-shrink-0 mt-0.5" aria-hidden="true" />
           <div>
-            <p className="font-medium text-warning">Scanned PDF — OCR required</p>
+            <p className="font-medium text-warning">Scanned PDF — text could not be read</p>
             <p className="text-body-sm text-text mt-1">
-              The extraction found no readable text layer. OCR is detected automatically, but no OCR service is connected. Retry won't help until a text-based PDF is provided.
+              The extraction found no readable text layer, and OCR could not read the scanned pages either. Check that the scan is clear and upright, then retry. You can also open the original PDF and confirm the pages are not blank.
             </p>
           </div>
         </div>

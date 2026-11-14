@@ -1,6 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { extractTextFromPdf, extractNoticeDocument } from "../services/pdf.service.js";
+import { env } from "../config/env.js";
 import { ApiError } from "../utils/errors.js";
 import { createMockSupabase } from "./helpers/mockSupabase.js";
 import { buildTextPdf } from "./helpers/pdfFixture.js";
@@ -15,11 +16,58 @@ test("text is extracted from a PDF document", async () => {
     assert.match(result.pages[0].text, /Summer internship 2027/);
 });
 
-test("a PDF without usable text is flagged for OCR", async () => {
-    const result = await extractTextFromPdf(buildTextPdf("hi"));
+const withOcr = async (fakeFetch, run) => {
+    const originalFetch = globalThis.fetch;
+    const originalKey = env.llm.apiKey;
 
-    assert.equal(result.status, "OCR_REQUIRED");
-    assert.match(result.message, /OCR/);
+    env.llm.apiKey = "test-key";
+    globalThis.fetch = fakeFetch;
+
+    try {
+        return await run();
+    } finally {
+        globalThis.fetch = originalFetch;
+        env.llm.apiKey = originalKey;
+    }
+};
+
+test("a PDF without usable text is flagged for OCR when OCR is unavailable", async () => {
+    const originalKey = env.llm.apiKey;
+    env.llm.apiKey = undefined;
+
+    try {
+        const result = await extractTextFromPdf(buildTextPdf("hi"));
+
+        assert.equal(result.status, "OCR_REQUIRED");
+        assert.match(result.message, /OCR/);
+    } finally {
+        env.llm.apiKey = originalKey;
+    }
+});
+
+test("a PDF with no text layer is read by OCR from the rendered page image", async () => {
+    let requestBody;
+
+    const result = await withOcr(
+        async (url, options) => {
+            requestBody = JSON.parse(options.body);
+
+            return {
+                ok: true,
+                json: async () => ({
+                    choices: [{ message: { content: JSON.stringify({ text: "Campus placement drive: CSE students apply by 30 November 2026." }) } }]
+                })
+            };
+        },
+        () => extractTextFromPdf(buildTextPdf("hi"))
+    );
+
+    assert.equal(result.status, "COMPLETED");
+    assert.equal(result.usedOcr, true);
+    assert.deepEqual(result.ocrPages, [1]);
+    assert.match(result.pages[0].text, /Campus placement drive/);
+    assert.equal(requestBody.messages[1].content[1].type, "image_url");
+    assert.match(requestBody.messages[1].content[1].image_url.url, /^data:image\/png;base64,/);
 });
 
 test("a corrupted PDF is rejected with a 422", async () => {
